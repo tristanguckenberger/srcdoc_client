@@ -39,6 +39,7 @@
 	import Login from './login.svelte';
 	import Vote from '$lib/components/ui/Vote/index.svelte';
 	import { changingPage, initialPostData, lockPageStore } from '$lib/stores/codeStore';
+	import VoteCount from '$lib/components/ui/Vote/VoteCount.svelte';
 
 	export let error = '';
 	export let posts;
@@ -118,32 +119,33 @@
 	{#if posts}
 		{#each posts?.data ? posts.data : posts as post, i (post.id)}
 			{#if post.tag[0] === 'Creation'}
-				<div class="card-container">
-					<Card
-						link={`/interact/${post.id}`}
-						image={`https://storage.googleapis.com/omni-thumbnails/${
-							post.photo ? post.photo : 'not_found'
-						}.png`}
-					>
-						<div slot="card-photo" />
-						<div slot="card-content" class="content-cont">
-							<a href="/interact/{post.id}">
-								<div class="card-title">
-									<h2>{post.title}</h2>
-								</div>
-							</a>
-							<div class="card-content">
-								<Vote itemID={post.id} isPost={true} />
-								<div class="text-info">
-									<div class="top-info">
-										{post.tag[0] || 'No Tags'} by
-										<a href="/profiles/{post.user}">{post.username}</a>
-									</div>
+				<!-- <div class="card-container"> -->
+				<Card
+					link={`/interact/${post.id}`}
+					image={`https://storage.googleapis.com/omni-thumbnails/${
+						post.photo ? post.photo : 'not_found'
+					}.png`}
+				>
+					<!-- <div slot="card-photo" /> -->
+					<div slot="card-photo" class="content-cont">
+						<a href="/interact/{post.id}">
+							<!-- <div class="card-title">
+								<h2>{post.title}</h2>
+							</div> -->
+						</a>
+						<div class="card-content">
+							<!-- <Vote itemID={post.id} isPost={true} /> -->
+							<VoteCount itemID={post.id} isPost={true} />
+							<div class="text-info">
+								<div class="top-info">
+									{post.tag[0] || 'No Tags'} by
+									<a href="/profiles/{post.user}">{post.username}</a>
 								</div>
 							</div>
 						</div>
-					</Card>
-				</div>
+					</div>
+				</Card>
+				<!-- </div> -->
 				<!-- {:else}
 				<div class="card-container">
 					<Card
@@ -184,7 +186,7 @@
 		justify-content: center;
 		display: flex;
 		flex-direction: column;
-		padding: 0 10px 0 10px;
+		// padding: 0 10px 0 10px;
 	}
 	.text-info {
 		flex-grow: 5;
@@ -194,7 +196,7 @@
 	}
 	.card-content {
 		display: flex;
-		flex-direction: row;
+		flex-direction: row-reverse;
 		row-gap: 10px;
 		column-gap: 1rem;
 		align-items: stretch;
@@ -203,9 +205,10 @@
 	.top-info {
 		font-size: 13px;
 		font-weight: 300;
-		background: var(--fadeAccent);
+		// background: var(--fadeAccent);
 		padding: 5px;
 		border-radius: 3px;
+		font-weight: 600;
 
 		a {
 			color: #d730ac96;

@@ -472,12 +472,13 @@
 		grid-template-rows: var(--authPageRowSizeValue) !important;
 		grid-gap: 10px;
 		max-width: 1700px;
-		width: calc(100% - 10px) !important;
-		padding: 0 10px 0 0;
-		height: calc(100%);
+		width: 100% !important;
+		padding: 0;
+		height: 100%;
 		overflow-y: scroll;
 		max-height: calc(100vh - 10px);
 		color-scheme: var(--colorScheme);
+		scroll-snap-type: y mandatory;
 	}
 	:global(.content-container .center-panel div.left.editorVisible) {
 		max-width: var(--pageContainerWidth) !important;

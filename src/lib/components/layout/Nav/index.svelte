@@ -154,8 +154,10 @@
 
 	{#if $page && $page.hasOwnProperty('path')}
 		{#if ($isPostStore === true || $isCreationStore === true) && windowWidth > 900}
+			<!-- <div> -->
 			<slot name="editorMenu" />
 			<Search />
+			<!-- </div> -->
 		{:else if ($isPostStore === false || $isCreationStore === false) && $page.url.pathname !== '/auth' && windowWidth > 900}
 			<div
 				class="browse-controls"
@@ -586,7 +588,7 @@
 		width: 90%;
 		width: 100%;
 		justify-content: center;
-		background-color: var(--mainThemeBackgroundColor);
+		// background-color: var(--mainThemeBackgroundColor);
 		justify-content: space-between;
 		align-items: center;
 		height: 68px;
@@ -713,7 +715,7 @@
 		color: var(--mainThemeNavDropColors);
 		background-color: var(--mainThemePanelColor);
 		border-radius: 6px;
-		transition: all 300ms cubic-bezier(0.075, 0.82, 0.165, 1);
+		// transition: all 300ms cubic-bezier(0.075, 0.82, 0.165, 1);
 		display: flex;
 		justify-content: space-between;
 		align-items: center;

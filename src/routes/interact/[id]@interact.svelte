@@ -518,7 +518,7 @@
 		grid-template-rows: var(--authPageRowSizeValue) !important;
 		grid-gap: 10px;
 		max-width: 1700px;
-		width: calc(100% - 10px) !important;
+		width: 100% !important;
 		padding: 0 10px 0 0;
 		height: calc(100%);
 		overflow-y: scroll;
