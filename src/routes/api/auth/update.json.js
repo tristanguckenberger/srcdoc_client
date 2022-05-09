@@ -7,7 +7,7 @@ export async function put({ request, locals }) {
 
     let data = { password };
 
-    const res = await api.put(`api/v1/auth/updatepassword`, data, token);
+    const res = await api.put(`api/v2/auth/updatepassword`, data, token);
     
     return {
         status: 200,

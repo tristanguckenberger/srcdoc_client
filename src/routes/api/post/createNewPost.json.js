@@ -10,7 +10,7 @@ export async function post({ request, locals }) {
         selectedTag,
         photo,
     } = formBody;
-    const res = await api.post(`api/v1/collectives/${CID}/posts`, {
+    const res = await api.post(`api/v2/collectives/${CID}/posts`, {
         title,
         text,
         selectedTag,

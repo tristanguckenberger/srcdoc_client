@@ -3,7 +3,7 @@ import * as cookie from 'cookie';
 
 
 export async function get() {
-    await api.get('api/v1/auth/logout');
+    await api.get('api/v2/auth/logout');
 	return {
         headers: {
             'set-cookie': `jwt=deleted; Path=/; HttpOnly; expires=Thu, 01 Jan 1970 00:00:00 GMT`

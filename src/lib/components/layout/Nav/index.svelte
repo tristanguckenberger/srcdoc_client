@@ -133,8 +133,7 @@
 	let navWidth = '100%';
 
 	afterNavigate((nav) => {
-		console.log(nav);
-		if (nav.to?.pathname.includes('interact')) {
+		if (nav.to?.pathname.includes('interact') || nav.to?.pathname.includes('learn')) {
 			navMargin = '0 10px 0 10px';
 			navWidth = 'calc(100% - 20px)';
 		} else if (nav.to?.pathname === '/') {
@@ -152,18 +151,12 @@
 >
 	<div class:showLeftPane class:isPost class:isCreation class="left-panel" />
 
-	{#if $page && $page.hasOwnProperty('path')}
+	{#if $page?.url?.pathname}
 		{#if ($isPostStore === true || $isCreationStore === true) && windowWidth > 900}
-			<!-- <div> -->
 			<slot name="editorMenu" />
 			<Search />
-			<!-- </div> -->
-		{:else if ($isPostStore === false || $isCreationStore === false) && $page.url.pathname !== '/auth' && windowWidth > 900}
-			<div
-				class="browse-controls"
-				in:fade={{ delay: 100, duration: 100 }}
-				out:fade={{ delay: 0, duration: 100 }}
-			>
+		{:else if ($isPostStore === false && $isCreationStore === false) && windowWidth > 900}
+			<div class="browse-controls">
 				<Search />
 			</div>
 		{/if}

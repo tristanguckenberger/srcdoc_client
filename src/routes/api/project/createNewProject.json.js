@@ -10,7 +10,7 @@ export async function post({ request, locals }) {
         comment
     } = formBody;
 
-    const res = await api.post(`api/v1/projects`, {
+    const res = await api.post(`api/v2/projects`, {
         pageData,
         PID,
         comment

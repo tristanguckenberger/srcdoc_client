@@ -1,6 +1,6 @@
 <script lang="ts">
   // import GoogleAuth from '@beyonk/svelte-social-auth/src/google-auth/GoogleAuth.svelte';
-  import { GoogleAuth } from '@beyonk/svelte-social-auth/src/components.js';
+  import { GoogleAuth } from '@beyonk/svelte-social-auth';
   import Form from '$lib/components/ui/Form/index.svelte';
   import Button from '$lib/components/ui/Button/index.svelte';
   import TextButton from '$lib/components/ui/Button/TextButton.svelte';
@@ -79,7 +79,7 @@
     background-color: var(--mainThemeModalFormBlur);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     backdrop-filter: saturate(180%) blur(20px);
-    padding: 2rem;
+    padding: 2rem 2rem 0 2rem;
 
     h2 {
       align-self: flex-start;
@@ -93,7 +93,7 @@
     display: flex;
     justify-content: flex-end;
     flex-direction: column;
-    padding: 2rem;
+    padding: 2rem 2rem 0 2rem;
     padding-top: 5px;
     width: 100%;
   }
@@ -135,5 +135,27 @@
     .form-content-container {
       padding: 10px;
     }
+  }
+
+  :global(.google-auth) {
+    font-weight: bold;
+    height: 40px !important;
+    font-family: Karla, sans-serif;
+    color: #ffffff;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    border: none;
+    padding: 5px !important;
+    border-radius: 4px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  :global(button) {
+    background: none;
+  }
+
+  :global(.auth-form.modal-auth form) {
+    height: fit-content !important;
   }
 </style>

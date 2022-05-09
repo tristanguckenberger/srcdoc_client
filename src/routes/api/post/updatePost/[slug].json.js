@@ -8,7 +8,7 @@ export async function put({ request, params, locals }) {
 
     let data = { title, text, tag, photo };
 
-    const res = await api.put(`api/v1/posts/${params.slug}`, data, token);
+    const res = await api.put(`api/v2/posts/${params.slug}`, data, token);
     
     return {
         status: 200,

@@ -3,8 +3,8 @@ const page = 1;
 const limit = 100;
 export async function get(uid) {
     // byUser
-    // const res = await api.get(`api/v1/posts?page=${page}&limit=${limit}`);
-    const res = await api.get(`api/v1/posts`);
+    // const res = await api.get(`api/v2/posts?page=${page}&limit=${limit}`);
+    const res = await api.get(`api/v2/posts`);
 
     return {
         status: 200,

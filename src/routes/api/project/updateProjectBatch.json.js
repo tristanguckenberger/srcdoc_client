@@ -8,7 +8,7 @@ export async function put({ request, locals }) {
 
     let data = { pageData, pid };
 
-    const res = await api.put(`api/v1/projects`, data, token);
+    const res = await api.put(`api/v2/projects`, data, token);
     
     return {
         status: 200,

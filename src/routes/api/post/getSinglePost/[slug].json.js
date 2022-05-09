@@ -3,7 +3,7 @@ import marked from "marked";
 const page = 1;
 const limit = 100;
 export async function get({ params }) {
-    const res = await api.get(`api/v1/posts/${params.slug}`);
+    const res = await api.get(`api/v2/posts/${params.slug}`);
 
     return {
         status: 200,

@@ -1,4 +1,4 @@
-// let url = "api/v1/comments/${CID}";
+// let url = "api/v2/comments/${CID}";
 
 import * as api from '$lib/api.js';
 
@@ -10,7 +10,7 @@ export async function put({ request, params, locals }) {
 
     let data = { text };
 
-    const res = await api.put(`api/v1/comments/${params.slug}`, data, token);
+    const res = await api.put(`api/v2/comments/${params.slug}`, data, token);
     
     return {
         status: 200,

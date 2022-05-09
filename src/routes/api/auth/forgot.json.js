@@ -5,7 +5,7 @@ export async function post({ request, locals }) {
     const formBody = await request.json();
     const token = locals.jwt;
     const { email } = formBody;
-    const body = await api.post(`api/v1/auth/forgotpassword`, {
+    const body = await api.post(`api/v2/auth/forgotpassword`, {
         email
 	}, token);
 

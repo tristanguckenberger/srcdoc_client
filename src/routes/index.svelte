@@ -112,7 +112,7 @@
 		}
 	}
 	$: posts = $postList;
-	$: collectives = $collectivesList ? JSON.parse(JSON.stringify($collectivesList)) : null;
+	// $: collectives = $collectivesList ? JSON.parse(JSON.stringify($collectivesList)) : null;
 </script>
 
 {#if $showPosts}
@@ -146,8 +146,8 @@
 					</div>
 				</Card>
 				<!-- </div> -->
-				<!-- {:else}
-				<div class="card-container">
+			{:else}
+				<!-- <div class="card-container">
 					<Card
 						link={`/collective/${post.collective}/${post.id}`}
 						image={`https://storage.googleapis.com/omni-thumbnails/${
@@ -162,7 +162,8 @@
 								</div>
 							</a>
 							<div class="card-content">
-								<Vote itemID={post.id} isPost={true} />
+		
+								<VoteCount itemID={post.id} isPost={true} />
 								<div class="text-info">
 									<div class="top-info">
 										{post.tag[0] || 'No Tags'} by
@@ -173,6 +174,34 @@
 						</div>
 					</Card>
 				</div> -->
+
+				<!-- <div class="card-container"> -->
+				<Card
+					link={`/learn/${post.id}`}
+					image={`https://storage.googleapis.com/omni-thumbnails/${
+						post.photo ? post.photo : 'not_found'
+					}.png`}
+				>
+					<!-- <div slot="card-photo" /> -->
+					<div slot="card-photo" class="content-cont">
+						<a href="/learn/{post.id}">
+							<!-- <div class="card-title">
+												<h2>{post.title}</h2>
+											</div> -->
+						</a>
+						<div class="card-content">
+							<!-- <Vote itemID={post.id} isPost={true} /> -->
+							<VoteCount itemID={post.id} isPost={true} />
+							<div class="text-info">
+								<div class="top-info">
+									{post.tag[0] || 'No Tags'} by
+									<a href="/profiles/{post.user}">{post.username}</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</Card>
+				<!-- </div> -->
 			{/if}
 		{/each}
 	{/if}

@@ -29,3 +29,4 @@ export const showAuthModal = writable(false);
 export const showPreferences = writable(false);
 export const isDarkModeStore = createWritableStore("isDarkModeStore", false);
 export const redirected = writable(false);
+export const isVertical = writable(true);

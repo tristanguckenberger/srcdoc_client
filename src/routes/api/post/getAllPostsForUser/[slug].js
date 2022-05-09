@@ -10,7 +10,7 @@ export async function get({ params }) {
         userId = slug.split('.')[0];
     }
 
-    const res = await api.get(`api/v1/posts/${userId}/posts`);
+    const res = await api.get(`api/v2/posts/${userId}/posts`);
   
     return {
         status: 200,

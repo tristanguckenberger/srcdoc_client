@@ -5,7 +5,7 @@ export async function post({ request }) {
     const formBody = await request.json();
     const { username, email, password } = formBody;
     const role = 'user';
-    const body = await api.post('api/v1/auth/register', {
+    const body = await api.post('api/v2/auth/register', {
         username,
         email,
         password,

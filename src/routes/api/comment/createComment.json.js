@@ -10,7 +10,7 @@ export async function post({ request, locals }) {
         parentId,
         tag
     } = formBody;
-    const res = await api.post(`api/v1/posts/${postId}/comments`, {
+    const res = await api.post(`api/v2/posts/${postId}/comments`, {
         postId, 
         text,
         withRepl,

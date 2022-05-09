@@ -22,6 +22,7 @@
 		/* background-color: var(--mainThemePanelColor); */
 		border-radius: 6px;
 		height: 100%;
+		min-height: 250px;
 		/* max-height: 250px; */
 		overflow: hidden;
 		scroll-snap-align: start;
@@ -50,7 +51,7 @@
 
 	.card-container:hover .card-photo {
 		/* transform: translateY(10px); */
-		filter: brightness(0.85);
+		filter: brightness(0.95);
 	}
 	:global(.card-title h2) {
 		font-family: 'Inter', serif;

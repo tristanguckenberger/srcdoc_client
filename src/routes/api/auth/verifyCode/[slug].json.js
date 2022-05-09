@@ -2,7 +2,7 @@ import * as api from '$lib/api.js';
 import { respond } from '../_respond';
 
 export async function get({ params }) {
-    const res = await api.get(`api/v1/auth/verify/${params.slug}`);
+    const res = await api.get(`api/v2/auth/verify/${params.slug}`);
     // console.log(res);
     if (res.success) {
 		return respond(res);

@@ -1,13 +1,63 @@
 <script>
-	import { session } from '$app/stores';
-	import { rightPanelWidth, isDarkModeStore } from '$lib/stores/layoutStore';
-
-	import Nav from '$lib/components/layout/Nav/index.svelte';
 	import ContentFeed from '$lib/components/layout/ContentFeed/index.svelte';
 	import PageInfoCard from '$lib/components/ui/PageInfoCard/index.svelte';
 	import LeftNavBar from '$lib/components/layout/Nav/LeftNavBar.svelte';
-	import { clientWidth } from '$lib/stores/layoutStore copy';
 	import { showFilters } from '$lib/stores/filterStore';
+	import { tweened } from 'svelte/motion';
+	import { quintOut } from 'svelte/easing';
+	import { clientWidth, isDarkModeStore, isVertical, showAuthModal, showPreferences } from '$lib/stores/layoutStore';
+	import Nav from '$lib/components/layout/Nav/index.svelte';
+	import Modal from '$lib/components/ui/Modal/index.svelte';
+	import SignIn from '$lib/components/auth/SignIn/index.svelte';
+	import SignUp from '$lib/components/auth/SignUp/index.svelte';
+	import CustomToggle from '$lib/components/ui/CustomToggle/index.svelte';
+	import VerifyEmail from '$lib/components/auth/VerifyEmail/index.svelte';
+	import {
+		currentPost,
+		currentPostPage,
+		currentPostPageId,
+		currentPostPageRevert,
+		isCreationStore,
+		isPostStore
+	} from '$lib/stores/postStore';
+	import {
+		changingPage,
+		cssStore,
+		htmlStore,
+		initialPostData,
+		jsStore,
+		localCodeStoreCSS,
+		localCodeStoreHTML,
+		localCodeStoreJS,
+		triggerReset
+	} from '$lib/stores/codeStore';
+	import { navigating, session } from '$app/stores';
+	import { showCreationModal } from '$lib/stores/modalStore';
+	import { authOption } from '$lib/stores/authStore';
+	import { post as postUtil, get as getUtil, put as putUtil } from '$lib/utils.js';
+	import { goto } from '$app/navigation';
+import { reload } from '$lib/stores/funcStore';
+import { onMount } from 'svelte';
+
+	let windowWidth;
+	let value = false; //  Layout Toggle
+	let email = '';
+	let error = '*';
+	let password = '';
+	let passwordConf = '';
+	let username = '';
+	let verificationCode = '';
+	let autions = [SignIn, SignUp, VerifyEmail];
+	let selectedCreation;
+	let unique = {};
+
+	$: selectedAution = autions[$authOption];
+	$: clientWidth.set(windowWidth);
+	$: isPost = $isPostStore;
+	$: showingPreferencesModal = $showPreferences;
+	$: modalCreationBool = $showCreationModal;
+	$: isSignUp = $authOption === 1;
+	$: isVertical.set(value);
 
 	let editorVisible = false;
 	let leftPaneWidth = 0;
@@ -77,6 +127,80 @@
 		textareaBorder = '2020210d';
 		mainThemeShadow = '0 1px 6px 0px #24232429';
 	}
+
+	const login = async (gCred) => {
+
+		const response = gCred
+		? await postUtil(`/api/auth/signIn.json`, { gCred }).then((r) => r.json(), gCred)
+		: await postUtil(`/api/auth/signIn.json`, { email, password }).then((r) => r.json());
+
+		console.log(response);
+
+		if (response && response.active === false) {
+		authOption.set(2);
+		} else {
+		console.log(response);
+		$session = response;
+		showAuthModal.set(false);
+		}
+	};
+	const handleNewCreation = async () => {
+		// if (selectedCreation = 'Post') {
+		//   modalCreationBool = false;
+		//   goToLink();
+		// }
+		switch (selectedCreation) {
+			case 'Post':
+				modalCreationBool = false;
+				goToLink(2);
+				break;
+			case 'Creation':
+			modalCreationBool = false;
+			goToLink(1);
+			break;
+		}
+	};
+	const verify = async () => {
+		const response = await getUtil(`/api/auth/verifyCode/${verificationCode}.json`);
+		$session = null;
+		const verificationRes = await response.json();
+		if (verificationRes && verificationRes.error) {
+		error = verificationRes.error;
+		} else if (verificationRes) {
+		error = '*';
+		$session = verificationRes;
+		showAuthModal.set(false);
+		}
+	};
+	const register = async () => {
+		if (passwordConf !== password) return;
+
+		let url = `/api/auth/register.json`;
+		try {
+		const response = await postUtil(url, {
+			username,
+			email,
+			password
+		});
+		if (response) {
+			$session = response;
+			showAuthModal.set(false);
+			goto('/');
+		}
+		} catch (error) {}
+	};
+	const speedMultiplyer = tweened(1.0, {
+    duration: 1000,
+    easing: quintOut
+  });
+
+  
+  onMount(async () => {
+    speedMultiplyer.set(4.5);
+    // window.addEventListener('message', handle_event, false);
+    // reload.set(reloadEditor);
+    // layoutInited = true;
+  });
 </script>
 
 <main
@@ -84,6 +208,7 @@
 --fadeAccent: #{mainThemeFadeAccent} !important;
 --pageContainerWidth: {pageContainerWidth}px; 
 --leftPaneWidth: {leftPaneWidth}px;
+--speed-multiplyer: {$speedMultiplyer}s; 
 --mainThemeBackgroundColor: #{mainThemeBackgroundColor} !important;
 --mainThemePanelColor: #{mainThemePanelColor} !important;
 --mainThemePanelAreaColor: #{mainThemePanelAreaColor} !important;
@@ -103,8 +228,71 @@
 --mainThemeShadow: {mainThemeShadow} !important;
 "
 >
+<!-- Auth Modal Start -->
+{#if $showAuthModal}
+	<Modal isCustomModal={true} isAuth={true} {isSignUp}>
+	<div class="auth-container" slot="custom_modal">
+		<div class="wavesBG">
+		<svg
+			class="waves"
+			xmlns="http://www.w3.org/2000/svg"
+			xmlns:xlink="http://www.w3.org/1999/xlink"
+			viewBox="0 24 150 28"
+			preserveAspectRatio="none"
+			shape-rendering="auto"
+		>
+			<defs>
+			<path
+				id="gentle-wave"
+				d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
+			/>
+			</defs>
+			<g class="parallax">
+			<use xlink:href="#gentle-wave" x="48" y="0" fill="#{mainThemeBackgroundColor}b3" />
+			<use xlink:href="#gentle-wave" x="48" y="3" fill="#{mainThemeBackgroundColor}80" />
+			<use xlink:href="#gentle-wave" x="48" y="5" fill="#{mainThemeBackgroundColor}4d" />
+			<use xlink:href="#gentle-wave" x="48" y="7" fill="#{mainThemeBackgroundColor}" />
+			</g>
+		</svg>
+		</div>
+		<div class="top-item top-right">
+		<h2 class="logo-text">srcdoc</h2>
+		<br />
+		<br />
+		<br />
+		<div class="auth-form modal-auth" class:isSignUp>
+			<!-- <SignIn bind:email={email} bind:password={password} {login}/> -->
+			<svelte:component
+			this={selectedAution}
+			bind:email
+			bind:password
+			bind:username
+			bind:passwordConf
+			bind:verificationCode
+			{error}
+			{login}
+			{register}
+			{verify}
+			/>
+		</div>
+		</div>
+	</div>
+	</Modal>
+{/if}
+<!-- Auth Modal End -->
+
+<!-- Preferences/General Settings Modal Start -->
+{#if showingPreferencesModal}
+	<Modal isCustomModal={false} isAuth={false}>
+	<div slot="toggle">
+		Darkmode
+		<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
+	</div>
+	</Modal>
+{/if}
+<!-- Preferences/General Settings Modal End -->
 	<!-- Nav Start -->
-	<div id="nav-container">
+	<!-- <div id="nav-container">
 		<Nav windowWidth={$clientWidth} isExplorePage={true}>
 			<li class="logo-li nav-id-header" slot="userProfile">
 				<div class="image-nav">
@@ -127,10 +315,9 @@
 				</div>
 			</li>
 		</Nav>
-	</div>
+	</div> -->
 	<div id="page-container" bind:clientWidth={pageContainerWidth}>
 		<ContentFeed bind:this={contentFeed}>
-			<!-- Left Panel Start -->
 			<div slot="left-panel" class="left-panel-container" bind:clientWidth={leftPaneWidth}>
 				<!-- if explore page -> Nav Panel-->
 				{#if filterVisible}
@@ -151,62 +338,9 @@
 					</div>
 				{/if}
 			</div>
-			<!-- Left Panel End -->
-
-			<!-- Center Panel Start -->
-			<div class="left" class:editorVisible slot="center-panel">
+			<div slot="center-panel" class="left" class:editorVisible>
 				<slot />
 			</div>
-			<!-- Center Panel End -->
-
-			<!-- Right Panel Start -->
-			<!-- <div slot="right-panel" bind:clientWidth={$rightPanelWidth}>
-				{#if filterVisible}
-					{#if $page.url.pathname.includes('profiles')}
-						<PageInfoCard>
-							<div class="image-slot" slot="image">
-								<div class="image-container" />
-							</div>
-							<div class="primary-text" slot="primary-text">
-								{$profileStore && $profileStore.username ? $profileStore.username : 'placeholder'}
-							</div>
-							<div class="secondary-text" slot="secondary-text">
-								{#if $session && $profileStore && $profileStore?._id === ($session?.user?.id.toString() || $session?.id.toString())}
-									<button
-										on:click|preventDefault={() => {
-											showUserEditModal = true;
-											bioUpdated = $profileStore?.bio;
-										}}>Editable</button
-									>
-								{/if}
-							</div>
-							<div class="info-container" slot="info-content">
-								<p>
-									{#if $profileStore?.bio}
-										{@html getBioMD($profileStore.bio) || 'bio'}
-									{/if}
-								</p>
-							</div>
-						</PageInfoCard>
-					{:else}
-						<PageInfoCard>
-							<div class="image-slot" slot="image">
-								<div class="image-container">image</div>
-							</div>
-							<div class="primary-text" slot="primary-text">Howdy</div>
-							<div class="secondary-text" slot="secondary-text">Howdy 2</div>
-							<div class="info-container" slot="info-content">
-								<p>
-									Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur libero tortor,
-									pulvinar id fermentum laoreet, sodales a libero. In at dui pretium, malesuada est
-									non, tristique lectus.
-								</p>
-							</div>
-						</PageInfoCard>
-					{/if}
-				{/if}
-			</div> -->
-			<!-- Right Panel End -->
 		</ContentFeed>
 	</div>
 </main>
@@ -245,10 +379,10 @@
 		height: 100%;
 		overflow-y: hidden;
 		overflow-x: hidden;
-		grid-template-rows: 68px calc(100vh - 68px);
+		grid-template-rows: calc(100vh);
 		grid-template-columns: 1fr;
 		grid-template-areas:
-			'nav'
+			// 'nav'
 			'page';
 		color: var(--mainThemePrimaryTextColor);
 	}
@@ -259,8 +393,9 @@
 	}
 	#page-container {
 		grid-area: page;
-		margin: 0 10px 10px 10px;
+		margin: 10px 10px 10px 10px;
 		max-width: calc(100vw - 20px);
+		height: calc(100% - 20px);
 	}
 	:global(.monaco-editor, .overflow-guard) {
 		border-radius: 6px !important;
@@ -338,6 +473,7 @@
 		justify-content: flex-start;
 		grid-gap: 10px;
 		height: 100%;
+		// margin-top: 10px;
 	}
 	.left-panel-container.authPage {
 		margin-top: 58px !important;
@@ -469,7 +605,7 @@
 	:global(.content-container .center-panel div.left) {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-		grid-template-rows: var(--authPageRowSizeValue) !important;
+		grid-template-rows: repeat(auto-fill, 285px);
 		grid-gap: 10px;
 		max-width: 1700px;
 		width: 100% !important;
@@ -561,11 +697,11 @@
 			overflow: hidden;
 			-webkit-mask-image: -webkit-radial-gradient(white, black);
 		}
-		.center-panel.s-9tIzRZLJ0Lek {
-			height: calc(100vh - 78px);
+		.center-panel {
+			height: 100%;
 			border-radius: 6px;
 			overflow: hidden;
-			-webkit-mask-image: -webkit-radial-gradient(white, black);
+			// -webkit-mask-image: -webkit-radial-gradient(white, black);
 		}
 
 		.editor-opts {
@@ -1072,5 +1208,25 @@
 	svg.menu-icons-svg line,
 	svg.menu-icons-svg polyline {
 		stroke: var(--mainThemePrimaryTextColor) !important;
+	}
+
+	/* width */
+	::-webkit-scrollbar {
+		width: inherit;
+	}
+
+	/* Track */
+	::-webkit-scrollbar-track {
+		background: #e3e3e3;
+	}
+
+	/* Handle */
+	::-webkit-scrollbar-thumb {
+		background: #888;
+	}
+
+	/* Handle on hover */
+	::-webkit-scrollbar-thumb:hover {
+		background: #555;
 	}
 </style>

@@ -42,60 +42,11 @@
   import { showFilters } from '$lib/stores/filterStore.js';
 
   // Preload Props
-  // export let collective;
   export let posts;
 
   // Initial Declarations
   let newPostMap = [];
 
-  // Reactive Declarations & Statements
-  // $: {
-  //     if ($filters && $refreshSwitch === true) {
-  //         newPostMap = [];
-  //         posts.data.filter(y => {
-
-  //             for (const filter in $filters) {
-
-  //                  $filters[filter].forEach(x => {
-
-  //                     if (filter === "skill-level") {
-
-  //                         if (y.hasOwnProperty("skillLevel") && y.skillLevel === x) {
-  //                             newPostMap = [...newPostMap, y];
-  //                         }
-  //                     } else if (filter === "archive-status") {
-  //                         if (y.hasOwnProperty("archiveStatus") && y.archiveStatus === x) {
-  //                             newPostMap = [...newPostMap, y];
-  //                         }
-  //                     } else if (filter === "post-type") {
-  //                         if (y.hasOwnProperty("postType") && y.postType === x) {
-  //                             newPostMap = [...newPostMap, y];
-  //                         }
-  //                     } else if (filter === "tags") {
-  //                         if (y.hasOwnProperty("tags") && y.tags === x) {
-  //                             newPostMap = [...newPostMap, y];
-  //                         }
-  //                     }
-
-  //                 });
-  //             }
-
-  //         });
-
-  //         if (newPostMap.length > 0) {
-  //             posts.data = newPostMap;
-  //         } else if ($filters != {} && newPostMap.length < 1) {
-  //             posts.data = newPostMap;
-  //         } else {
-  //             posts.data = postsBackup;
-  //         }
-  //         setTimeout(() => {
-  //             refreshSwitch.set(false);
-  //         }, 200);
-  //     } else if ($refreshSwitch === true) {
-  //         posts.data = postsBackup;
-  //     }
-  // }
   $: posts = $postList;
 
   // Life Cycle Methods
@@ -113,16 +64,12 @@
     <a href="/collective/{post.collective}/{post.id}" class="card-container">
       <Card image={`https://picsum.photos/${315 + i}/150`}>
         <div slot="card-photo">
-          <!-- <img src="./big" alt="thumbnail"> -->
         </div>
         <div slot="card-content">
           <div class="card-content">
             <div class="card-title">
               <h2>{post.title}</h2>
             </div>
-            <!-- <div class="card-body">
-                            <p>{@html post.text.slice(0, post.text.slice(0, 100).lastIndexOf("."))}...</p>
-                        </div> -->
           </div>
           <div class="top-info">
             <span>{post.collectiveName}</span> | posted by <span>{post.username}</span>

@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { clientWidth, rightPanelWidth } from '$lib/stores/layoutStore';
-	import { getStores, navigating, page } from '$app/stores';
-	import { currentSlide } from '$lib/stores/rotatorStore';
+	import { rightPanelWidth } from '$lib/stores/layoutStore';
+	import { page } from '$app/stores';
 	import { afterUpdate } from 'svelte';
 
 	let showLeftPane = true;
@@ -15,12 +14,12 @@
 		hidePanel = false;
 	}
 
-	afterUpdate(() => {
-		if (rigthWidth > 0) {
-			console.log('setting rightPanelWidth at line 20 in afterUpdate in ContentFeed.svelte');
-			rightPanelWidth.set(rigthWidth);
-		}
-	});
+	// afterUpdate(() => {
+	// 	if (rigthWidth > 0) {
+	// 		console.log('setting rightPanelWidth at line 20 in afterUpdate in ContentFeed.svelte');
+	// 		rightPanelWidth.set(rigthWidth);
+	// 	}
+	// });
 
 	$: hideRightPanel = $page.url.pathname === '/';
 </script>
@@ -40,8 +39,8 @@
 <style>
 	.left-panel {
 		position: relative;
-		top: -58px;
-		height: calc(100% + 58px);
+		/* top: -58px; */
+		height: 100%;
 		border-radius: 6px;
 	}
 
@@ -49,10 +48,13 @@
 		display: grid;
 		grid-template-columns: minmax(100px, 20%) minmax(600px, 80%) minmax(100px, 20%);
 		grid-gap: 10px;
+		row-gap: 0;
 		max-width: 1980px;
 		width: 100%;
 		justify-content: center;
-		margin: auto;
+		/* margin: auto; */
+		grid-template-rows: 100%;
+		height: 100%;
 	}
 
 	@media screen and (min-width: 900px) {
@@ -67,7 +69,7 @@
 	}
 
 	.center-panel {
-		height: calc(100vh - 78px);
+		height: 100%;
 	}
 
 	.right-panel {
