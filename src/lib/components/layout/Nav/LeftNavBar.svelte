@@ -155,18 +155,23 @@
 			><a href="/">Search</a>
 		</li>
 		<li>
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
+				><!--! Font Awesome Pro 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path
+					d="M50.73 58.53C58.86 42.27 75.48 32 93.67 32H208V160H0L50.73 58.53zM240 160V32H354.3C372.5 32 389.1 42.27 397.3 58.53L448 160H240zM448 416C448 451.3 419.3 480 384 480H64C28.65 480 0 451.3 0 416V192H448V416z"
+				/></svg
+			><a href="."
+			on:click|preventDefault={() => {
+				// Set store toggle value for dark/light theme
+				// isDarkModeStore.set(!$isDarkModeStore);
+				showCreationModal.set(!$showCreationModal);
+			}}>Create</a>
+		</li>
+		<li>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"
 				><!--! Font Awesome Pro 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path
 					d="M160 48C160 21.49 181.5 0 208 0H256V80C256 88.84 263.2 96 272 96H304C312.8 96 320 88.84 320 80V0H368C394.5 0 416 21.49 416 48V176C416 202.5 394.5 224 368 224H208C181.5 224 160 202.5 160 176V48zM96 288V368C96 376.8 103.2 384 112 384H144C152.8 384 160 376.8 160 368V288H208C234.5 288 256 309.5 256 336V464C256 490.5 234.5 512 208 512H48C21.49 512 0 490.5 0 464V336C0 309.5 21.49 288 48 288H96zM416 288V368C416 376.8 423.2 384 432 384H464C472.8 384 480 376.8 480 368V288H528C554.5 288 576 309.5 576 336V464C576 490.5 554.5 512 528 512H368C341.5 512 320 490.5 320 464V336C320 309.5 341.5 288 368 288H416z"
 				/></svg
 			><a href="/">Your Creations</a>
-		</li>
-		<li>
-			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
-				><!--! Font Awesome Pro 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. --><path
-					d="M50.73 58.53C58.86 42.27 75.48 32 93.67 32H208V160H0L50.73 58.53zM240 160V32H354.3C372.5 32 389.1 42.27 397.3 58.53L448 160H240zM448 416C448 451.3 419.3 480 384 480H64C28.65 480 0 451.3 0 416V192H448V416z"
-				/></svg
-			><a href="/">New Creation</a>
 		</li>
 		<li>
 			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
@@ -480,8 +485,8 @@
 								}}>Sign Up</a
 							>
 						</li>
-						<hr />
-						<li>
+						<div class="theme-toggle">
+							<hr>
 							<a
 								class="nav-toggle"
 								href="."
@@ -492,11 +497,11 @@
 							>
 								Dark Mode
 								<div class="toggle-container">
-									{#if $isDarkModeStore} On {:else} Off {/if}
+									<!-- {#if $isDarkModeStore} On {:else} Off {/if} -->
 									<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
 								</div>
 							</a>
-						</li>
+						</div>
 			
 			{/if}
 		{/if}
@@ -509,10 +514,11 @@
 		list-style-type: none;
 		flex-direction: column;
 		height: 100%;
-		justify-content: space-between;
+		// justify-content: space-between;
 		max-height: 220px;
 		margin-block-start: 2rem;
 		padding-inline-start: 1.4rem;
+		row-gap: 30px;
 
 		li {
 			display: flex;
@@ -543,8 +549,9 @@
 		display: flex;
 		list-style-type: none;
 		flex-direction: column;
-		height: 100%;
-		justify-content: space-between;
+		// height: 100%;
+		// justify-content: space-between;
+		row-gap: 30px;
 		max-height: 220px;
 		margin-block-start: 0;
 		padding-inline-start: 0;
@@ -553,10 +560,12 @@
 			padding-left: 2rem;
 		}
 
-		li a.nav-toggle {
+		div.theme-toggle a.nav-toggle {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
+			padding-left: 2rem;
+			padding-top: 18px;
 			// color: var(--mainThemePrimaryTextColor) !important;
 			.toggle-container {
 				display: flex;

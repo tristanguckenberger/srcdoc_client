@@ -1,6 +1,6 @@
 <script lang="ts">
 import { showAuthModal, showPreferences } from "$lib/stores/layoutStore";
-
+import { showCreationModal } from "$lib/stores/modalStore";
 
     export let showEditorSettings:boolean;
     export let showUserEditModal:boolean;
@@ -11,9 +11,10 @@ import { showAuthModal, showPreferences } from "$lib/stores/layoutStore";
 
     const handleClick = (event) => {
         if (event.target.classList.contains('modal-container')) {
-            showEditorSettings = false;
             showAuthModal.set(false);
             showPreferences.set(false);
+            showCreationModal.set(false);
+            showEditorSettings = false;
             showUserEditModal = false;
             modalCreationBool = false;
         };

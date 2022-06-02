@@ -30,7 +30,6 @@
 	let split;
 
 	afterUpdate(() => {
-		console.log($clearSplit);
 		if ($clearSplit) {
 			reloadSplit();
 			setTimeout(() => {
@@ -41,6 +40,7 @@
 
 	onDestroy(() => {
 		split = null;
+		splitInstance.destroy();
 	});
 
 	// Replaces functionality found in onMount

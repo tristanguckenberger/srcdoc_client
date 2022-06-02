@@ -1,16 +1,29 @@
 export async function respond(body) {
+
+	console.log(body)
 	if (body.errors) {
 		return { status: 401, body };
 	}
 
-	const json = JSON.stringify(body.token);
-	const gCred = JSON.stringify(body.gCred);
-	const value = Buffer.from(json).toString('base64');
-	const gVal = Buffer.from(gCred).toString('base64');
-    const data = json ? json.split('.')[1] : null;
-    const user = JSON.parse(Buffer.from(data, 'base64').toString('utf-8'))
+	let json;
+	let value;
+	let data;
+	let user;
 
-	if (user && user.active) {
+	if (body?.token) {
+		json = JSON.stringify(body.token);
+		value = Buffer.from(json).toString('base64');
+		data = json ? json.split('.')[1] : null;
+		user = JSON.parse(Buffer.from(data, 'base64').toString('utf-8'));
+	}
+
+
+	// const gCred = JSON.stringify(body.gCred);
+	// const gVal = Buffer.from(gCred).toString('base64');
+
+
+
+	if (user && user?.active) {
 		return {
 			headers: {
 				'set-cookie': `jwt=${value}; Path=/; HttpOnly`

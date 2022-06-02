@@ -18,7 +18,8 @@
 		currentPostPageId,
 		currentPostPageRevert,
 		isCreationStore,
-		isPostStore
+		isPostStore,
+		postDetailStarter
 	} from '$lib/stores/postStore';
 	import {
 		changingPage,
@@ -36,8 +37,8 @@
 	import { authOption } from '$lib/stores/authStore';
 	import { post as postUtil, get as getUtil, put as putUtil } from '$lib/utils.js';
 	import { goto } from '$app/navigation';
-import { reload } from '$lib/stores/funcStore';
-import { onMount } from 'svelte';
+	import { reload } from '$lib/stores/funcStore';
+	import { onMount } from 'svelte';
 
 	let windowWidth;
 	let value = false; //  Layout Toggle
@@ -48,8 +49,19 @@ import { onMount } from 'svelte';
 	let username = '';
 	let verificationCode = '';
 	let autions = [SignIn, SignUp, VerifyEmail];
-	let selectedCreation;
 	let unique = {};
+	let options = ['Creation', 'Post', 'Project', 'Collective'];
+	let selectedCreation;
+	let currentPostTitle = '';
+  	let currentPostBlurb = '';
+	let selectedTag;
+	let tags = [
+		{ id: 1, text: `Q&A` },
+		{ id: 2, text: `Tutorial` },
+		{ id: 3, text: `PSA` },
+		{ id: 4, text: `Request` },
+		{ id: 5, text: `Creation` }
+	];
 
 	$: selectedAution = autions[$authOption];
 	$: clientWidth.set(windowWidth);
@@ -134,16 +146,36 @@ import { onMount } from 'svelte';
 		? await postUtil(`/api/auth/signIn.json`, { gCred }).then((r) => r.json(), gCred)
 		: await postUtil(`/api/auth/signIn.json`, { email, password }).then((r) => r.json());
 
-		console.log(response);
-
 		if (response && response.active === false) {
-		authOption.set(2);
+			authOption.set(2);
 		} else {
-		console.log(response);
-		$session = response;
-		showAuthModal.set(false);
+			$session = response;
+			showAuthModal.set(false);
 		}
 	};
+
+	const goToLink = async (typeId) => {
+		switch (typeId) {
+			case 1:
+				modalCreationBool = false;
+				$postDetailStarter = {
+				postTitle: currentPostTitle,
+				postDesc: currentPostBlurb,
+				tag: 'Creation'
+				};
+				goto(`/interact/new`);
+				break;
+			case 2:
+				$postDetailStarter = {
+				postTitle: currentPostTitle,
+				postDesc: currentPostBlurb,
+				tag: selectedTag
+				};
+				goto(`/learn/new`);
+				break;
+		}
+	};
+
 	const handleNewCreation = async () => {
 		// if (selectedCreation = 'Post') {
 		//   modalCreationBool = false;
@@ -228,94 +260,128 @@ import { onMount } from 'svelte';
 --mainThemeShadow: {mainThemeShadow} !important;
 "
 >
-<!-- Auth Modal Start -->
-{#if $showAuthModal}
-	<Modal isCustomModal={true} isAuth={true} {isSignUp}>
-	<div class="auth-container" slot="custom_modal">
-		<div class="wavesBG">
-		<svg
-			class="waves"
-			xmlns="http://www.w3.org/2000/svg"
-			xmlns:xlink="http://www.w3.org/1999/xlink"
-			viewBox="0 24 150 28"
-			preserveAspectRatio="none"
-			shape-rendering="auto"
-		>
-			<defs>
-			<path
-				id="gentle-wave"
-				d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
-			/>
-			</defs>
-			<g class="parallax">
-			<use xlink:href="#gentle-wave" x="48" y="0" fill="#{mainThemeBackgroundColor}b3" />
-			<use xlink:href="#gentle-wave" x="48" y="3" fill="#{mainThemeBackgroundColor}80" />
-			<use xlink:href="#gentle-wave" x="48" y="5" fill="#{mainThemeBackgroundColor}4d" />
-			<use xlink:href="#gentle-wave" x="48" y="7" fill="#{mainThemeBackgroundColor}" />
-			</g>
-		</svg>
+	<!-- Auth Modal Start -->
+	{#if $showAuthModal}
+		<Modal isCustomModal={true} isAuth={true} {isSignUp}>
+		<div class="auth-container" slot="custom_modal">
+			<div class="wavesBG">
+			<svg
+				class="waves"
+				xmlns="http://www.w3.org/2000/svg"
+				xmlns:xlink="http://www.w3.org/1999/xlink"
+				viewBox="0 24 150 28"
+				preserveAspectRatio="none"
+				shape-rendering="auto"
+			>
+				<defs>
+				<path
+					id="gentle-wave"
+					d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
+				/>
+				</defs>
+				<g class="parallax">
+				<use xlink:href="#gentle-wave" x="48" y="0" fill="#{mainThemeBackgroundColor}b3" />
+				<use xlink:href="#gentle-wave" x="48" y="3" fill="#{mainThemeBackgroundColor}80" />
+				<use xlink:href="#gentle-wave" x="48" y="5" fill="#{mainThemeBackgroundColor}4d" />
+				<use xlink:href="#gentle-wave" x="48" y="7" fill="#{mainThemeBackgroundColor}" />
+				</g>
+			</svg>
+			</div>
+			<div class="top-item top-right">
+			<h2 class="logo-text">srcdoc</h2>
+			<br />
+			<br />
+			<br />
+			<div class="auth-form modal-auth" class:isSignUp>
+				<!-- <SignIn bind:email={email} bind:password={password} {login}/> -->
+				<svelte:component
+				this={selectedAution}
+				bind:email
+				bind:password
+				bind:username
+				bind:passwordConf
+				bind:verificationCode
+				{error}
+				{login}
+				{register}
+				{verify}
+				/>
+			</div>
+			</div>
 		</div>
-		<div class="top-item top-right">
-		<h2 class="logo-text">srcdoc</h2>
-		<br />
-		<br />
-		<br />
-		<div class="auth-form modal-auth" class:isSignUp>
-			<!-- <SignIn bind:email={email} bind:password={password} {login}/> -->
-			<svelte:component
-			this={selectedAution}
-			bind:email
-			bind:password
-			bind:username
-			bind:passwordConf
-			bind:verificationCode
-			{error}
-			{login}
-			{register}
-			{verify}
-			/>
-		</div>
-		</div>
-	</div>
-	</Modal>
-{/if}
-<!-- Auth Modal End -->
+		</Modal>
+	{/if}
+	<!-- Auth Modal End -->
 
-<!-- Preferences/General Settings Modal Start -->
-{#if showingPreferencesModal}
-	<Modal isCustomModal={false} isAuth={false}>
-	<div slot="toggle">
-		Darkmode
-		<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
-	</div>
-	</Modal>
-{/if}
-<!-- Preferences/General Settings Modal End -->
-	<!-- Nav Start -->
-	<!-- <div id="nav-container">
-		<Nav windowWidth={$clientWidth} isExplorePage={true}>
-			<li class="logo-li nav-id-header" slot="userProfile">
-				<div class="image-nav">
-					<div class="image-slot">
-						<div class="image-container" />
+	<!-- Preferences/General Settings Modal Start -->
+	{#if showingPreferencesModal}
+		<Modal isCustomModal={false} isAuth={false}>
+		<div slot="toggle">
+			Darkmode
+			<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
+		</div>
+		</Modal>
+	{/if}
+
+	<!-- Creation Modal Start -->
+	{#if modalCreationBool}
+		<Modal isCustomModal={modalCreationBool} bind:modalCreationBool>
+			<div class="creation-modal-container" slot="custom_modal">
+				Create New:
+				<!-- Select Creation Type Start -->
+				<div class="menu-toggle select">
+					<select bind:value={selectedCreation}>
+						{#if options}
+							{#each options as option}
+								<option value={option}>
+									{option}
+								</option>
+							{/each}
+						{/if}
+					</select>
+				</div>
+				<!-- Select Creation Type End -->
+
+				<!-- Post Selection Options Start -->
+				{#if selectedCreation === 'Post' || selectedCreation === 'Creation'}
+					<div class="post-details">
+						<label for="page-text">
+							<span>Post Title</span>
+						</label>
+						<input
+							type="text"
+							bind:value={currentPostTitle}
+							name="title"
+							placeholder="Add post title..."
+						/>
+						<br />
+						<label for="page-text">
+							<span>Post Description</span>
+						</label>
+						<textarea
+							class="description-body"
+							name="postText"
+							placeholder="Add post description..."
+							bind:value={currentPostBlurb}
+						/>
+						<br />
+						<label>
+							<select bind:value={selectedTag}>
+								{#each tags as tag}
+									<option value={tag}>{tag.text}</option>
+								{/each}
+							</select>
+						</label>
 					</div>
-				</div>
-				<div style="height: 100%; flex-grow: 2;">
-					<h3 class="logo-text-nav">
-						{$session.username || $session.user.username}
-					</h3>
-					<span style="font-size: 14px;">View Profile</span>
-				</div>
-				<div>
-					<h2
-						style="font-weight: 200; height: 100%; display: flex; align-items: center; margin-block-end: 0; margin-block-start: 0;"
-					>
-						>
-					</h2>
-				</div>
-			</li>
-		</Nav>
-	</div> -->
+				{/if}
+				<!-- Post Selection Options End -->
+
+				<button on:click={handleNewCreation}>Create</button>
+			</div>
+		</Modal>
+	{/if}
+	<!-- Creation Modal End -->
+
 	<div id="page-container" bind:clientWidth={pageContainerWidth}>
 		<ContentFeed bind:this={contentFeed}>
 			<div slot="left-panel" class="left-panel-container" bind:clientWidth={leftPaneWidth}>
@@ -343,6 +409,9 @@ import { onMount } from 'svelte';
 			</div>
 		</ContentFeed>
 	</div>
+
+
+
 </main>
 
 <style lang="scss">

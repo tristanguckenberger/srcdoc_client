@@ -241,8 +241,9 @@
 	let mods;
 	let showPostDetails = false;
 	let showCodeDetails = false;
+
 	let attachCode = false;
-	let pageDescription = '';
+	let pageDescription = '';	
 	let tags = [
 		{ id: 1, text: `Q&A` },
 		{ id: 2, text: `Tutorial` },
@@ -277,17 +278,6 @@
 	$: page = $currentPostPage;
 
 	// Life Cycle Methods
-	// onMount(() => {
-	// 	isPostStore.set(true);
-	// 	if ($currentPostPage) {
-	// 		htmlStore.set($currentPostPage.html);
-	// 		cssStore.set($currentPostPage.css);
-	// 		jsStore.set($currentPostPage.js);
-	// 	}
-
-	// 	if ($currentPostPage && $currentPostPage.id) currentPostPageId.set($currentPostPage.id);
-	// 	if (!postComments && getCommentsSwitch) fetchComments();
-	// });
 	let fetchCount = 0;
 	// Post Control Functions
 	const newPage = () => {

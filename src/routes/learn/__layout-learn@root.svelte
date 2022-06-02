@@ -20,6 +20,7 @@
 		localCodeStoreJS,
 		triggerReset
 	} from '$lib/stores/codeStore';
+
 	let windowWidth;
 	let pageContainerWidth;
 	let leftPaneWidth;
@@ -32,7 +33,8 @@
 
 	$: clientWidth.set(windowWidth);
 	$: isPost = $isPostStore;
-	$: postPages = $currentPost ? $currentPost.pages : null;
+	$: postPages = $currentPost?.pages;
+	$: console.log($currentPost?.pages);
 
 	// THEMES ---------------------------------------------------------------------
 	let mainThemeBackgroundColor = 'ECECEC';
@@ -178,7 +180,7 @@
 				</div>
 				<div style="height: 100%; flex-grow: 2;">
 					<h3 class="logo-text-nav">
-						{$session.username || $session.user.username}
+						{$session?.['username'] || $session?.['user']?.['username']}
 					</h3>
 					<span style="font-size: 14px;">View Profile</span>
 				</div>
@@ -190,11 +192,10 @@
 					</h2>
 				</div>
 			</li>
-			
+
 			<div slot="editorMenu">
 				<a class="sticky-toggle" href="/" on:click|preventDefault>
 					<div class="menu-toggle select">
-
 						{#if postPages}
 							<select
 								bind:value={selected}
@@ -206,10 +207,10 @@
 								{#each postPages as pageVal, i}
 									<option value={pageVal}>
 										{#if !$triggerReset}
-											{#if pageVal.hasOwnProperty('pageTitle')}
-												{pageVal.pageTitle}
+											{#if pageVal?.pageTitle}
+												{pageVal?.pageTitle}
 											{:else}
-												{pageVal.title}
+												{pageVal?.title}
 											{/if}
 										{/if}
 									</option>
@@ -382,7 +383,6 @@
 					</div>
 				</a>
 			</div>
-
 		</Nav>
 	</div>
 	<slot />

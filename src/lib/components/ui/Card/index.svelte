@@ -11,19 +11,14 @@
 			<slot name="card-photo" />
 		</div>
 	</a>
-	<!-- <div class="card-body">
-		<slot name="card-content" />
-	</div> -->
 </div>
 
 <style lang="scss">
 	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 	.card-container {
-		/* background-color: var(--mainThemePanelColor); */
 		border-radius: 6px;
 		height: 100%;
 		min-height: 250px;
-		/* max-height: 250px; */
 		overflow: hidden;
 		scroll-snap-align: start;
 	}
@@ -58,11 +53,5 @@
 		font-weight: 500;
 		font-size: 18px;
 		margin-block-start: 0;
-	}
-	.card-body {
-		/* padding: 1rem; */
-		padding: 10px;
-		// z-index: 100000000000000000000000000000000;
-		background-color: var(--mainThemePanelColor);
 	}
 </style>

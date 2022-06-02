@@ -157,7 +157,7 @@
 	import { creationStorePostCreationFunc, runSave } from '$lib/stores/creationFuncStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
 
-	let selectedTag = $postDetailStarter.tag;
+	let selectedTag = $postDetailStarter?.['tag'];
 
 	let currentPage;
 	$: currentPage = $currentPostPage;
@@ -230,11 +230,7 @@
 
 <div id="page-container" class:showLoader bind:clientWidth={pageContainerWidth}>
 	{#if windowWidth && windowWidth > 900}
-		<div
-			class:showLoader
-			bind:this={splitPaneContainer}
-			class="split-container"
-		>
+		<div class:showLoader bind:this={splitPaneContainer} class="split-container">
 			<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
 				<section id="split-2">
 					<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
