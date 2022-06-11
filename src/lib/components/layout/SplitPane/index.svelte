@@ -1,3 +1,5 @@
+<svelte:options accessors />
+
 <script lang="ts">
 	import { onMount, afterUpdate, onDestroy } from 'svelte';
 	import { clearSplit, splitStore } from '$lib/stores/splitStore';
@@ -17,7 +19,7 @@
 
 	const reloadSplit = () => {
 		// Destory existing splitInstance
-		if (splitInstance && !authPage) splitInstance.destroy();
+		if (splitInstance && !authPage) splitInstance.destroy(false, false);
 
 		// Init a new split instance
 		splitInstance = Split(panes, {
@@ -67,7 +69,6 @@
 		width: 100%;
 		max-width: 100vw;
 	}
-
 	.split.vertical {
 		display: block;
 		flex-direction: unset;

@@ -5,6 +5,14 @@
 	import type { Log } from '$lib/types/log';
 
 	export let logs: Log[];
+	$: {
+		console.log('=====================')
+		console.log('=====================')
+		console.log(logs);
+		console.log('=====================')
+		console.log('=====================')
+	
+	}
 </script>
 
 <div class="clg_container">

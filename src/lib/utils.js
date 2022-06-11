@@ -1,3 +1,5 @@
+import { messageEvent } from "./stores/eventStore";
+
 export function post(endpoint, data, token) {
 	return fetch(endpoint, {
 		method: 'POST',
@@ -21,7 +23,6 @@ export function put(endpoint, data, token) {
 		body: JSON.stringify(data),
 	});
 }
-
 
 export function dataURLtoFile(dataurl, filename) {
 	var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],

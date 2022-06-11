@@ -226,6 +226,7 @@
 
 	// Stores
 	import { showCaptureThumbnail } from '$lib/stores/codeStore.js';
+import { messageEvent } from '$lib/stores/eventStore';
 
 	// Props
 	export let posts;
@@ -243,7 +244,7 @@
 	let showCodeDetails = false;
 
 	let attachCode = false;
-	let pageDescription = '';	
+	let pageDescription = '';
 	let tags = [
 		{ id: 1, text: `Q&A` },
 		{ id: 2, text: `Tutorial` },
@@ -276,6 +277,7 @@
 	}
 	$: toggleUpdateCodeWithPost.set(attachCode);
 	$: page = $currentPostPage;
+	$: logs = $messageEvent;
 
 	// Life Cycle Methods
 	let fetchCount = 0;
@@ -480,14 +482,65 @@
 	// let daysTimePass = now.getTime() - dateCreated.getTime();
 	$: daysPassed = new Date().getTime() - dateCreated.getTime();
 	$: totalDays = Math.floor(daysPassed / (1000 * 3600 * 24));
+
+	let splitOne = null;
+	let splitTwo = null;
+	let splitThree = null;
+	let splitFour = null;
+	let splitFive = null;
+	let splitSix = null;
+	let splitSeven = null;
+
+	const maximize = async (currentChild, isVertical = false) => {
+		/*
+		 * Steps for Maximizing a pane a user clicks
+		 * 1. Determine nearest parent #Split-<num here>
+		 * 2. Get all children including self
+		 * 3. Check if vertical
+		 * 4. If vertical use height
+		 */
+		const { target } = currentChild;
+		const parentSplit = target.closest('.split');
+		const parentSection = target.closest('section');
+		console.log();
+		const children = parentSplit.children;
+
+		const childCountTotal = parentSplit.childElementCount;
+		const gutterCount =
+			[...children].filter((child) => child?.classList.contains('gutter')).length ?? 0;
+		const adjustedChildCount = childCountTotal - gutterCount;
+		[...children].forEach((child) => {
+			console.log(parentSection == child);
+
+			if (parentSection == child) {
+				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(${
+					adjustedChildCount > 2 ? 80 : 90
+				}% - 5px)`;
+			} else if (parentSection != child && !child?.classList.contains('gutter')) {
+				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(10% - 5px)`;
+			}
+		});
+
+		const parentParentSplit = parentSplit.closest('.split');
+		if (parentParentSplit) {
+			console.log('parentParentSplit:');
+			console.log(parentParentSplit);
+		}
+	};
+	let paneOneSize = 30; // This is the page pane
+	let paneTwoSize = 70; // This is the editor and output pane cluster
+	let paneThreeSize; // This is the editor pane cluster
 </script>
 
 <div id="page-container" class:showLoader bind:clientWidth={pageContainerWidth}>
 	{#if windowWidth && windowWidth > 900}
-
 		<div class:showLoader bind:this={splitPaneContainer} class="split-container">
-			<SplitPane panes={['#split-0', '#split-1']} sizes={[30, 70]}>
-				<section id="split-0">
+			<SplitPane panes={['#split-0', '#split-1']} sizes={[paneOneSize, paneTwoSize]}>
+				<!-- Page Content -->
+				<section id="split-0" bind:this={splitOne}>
+					<div class="slot-control-bar">
+						<div class="container">page</div>
+					</div>
 					<div class="post-contentContainer" style="--contentWidth: calc({contentWidth}px - 2rem);">
 						<div class="post-content" bind:clientWidth={contentWidth}>
 							{#if editing}
@@ -687,33 +740,83 @@
 						</div>
 					</div>
 				</section>
-				<section id="split-1" style="z-index: 1000000000;">
+
+				<!-- Editor & Output Content -->
+				<section id="split-1" style="z-index: 1000000000;" bind:this={splitTwo}>
 					<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
-						<section id="split-2">
+						<!-- Editor Content -->
+						<section id="split-2" bind:this={splitThree}>
 							<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
-								<section id="split-html" class="section-panel" style="overflow-x: visible;">
+								<section
+									id="split-html"
+									class="section-panel"
+									style="overflow-x: visible;"
+									bind:this={splitFive}
+								>
 									{#if html}
+										<div
+											class="slot-control-bar"
+											on:dblclick={(e) => {
+												maximize(e, !value);
+											}}
+										>
+											<div class="container">html</div>
+										</div>
 										<Editor code={html} />
 									{/if}
 								</section>
-								<section id="split-css" class="section-panel" style="overflow-x: visible;">
+								<section
+									id="split-css"
+									class="section-panel"
+									style="overflow-x: visible;"
+									bind:this={splitSix}
+								>
+									<div
+										class="slot-control-bar"
+										on:dblclick={(e) => {
+											maximize(e, !value);
+										}}
+									>
+										<div class="container">css</div>
+									</div>
 									<Editor code={css} />
 								</section>
-								<section id="split-js" class="section-panel" style="overflow-x: visible;">
+								<section
+									id="split-js"
+									class="section-panel"
+									style="overflow-x: visible;"
+									bind:this={splitSeven}
+								>
+									<div
+										class="slot-control-bar"
+										on:dblclick={(e) => {
+											maximize(e, !value);
+										}}
+									>
+										<div class="container">js</div>
+									</div>
 									<Editor code={js} />
 								</section>
 							</SplitPane>
 						</section>
-						<section id="split-3">
+
+						<!-- Output Content -->
+						<section id="split-3" bind:this={splitFour}>
 							<SplitPane
 								panes={['#split-output', '#split-console']}
 								vertical={!value}
 								sizes={[100, 0]}
 							>
 								<section id="split-output" class="section-panel">
+									<div class="slot-control-bar">
+										<div class="container">output</div>
+									</div>
 									<Output {srcdoc} />
 								</section>
 								<section id="split-console" class="section-panel">
+									<div class="slot-control-bar">
+										<div class="container">console</div>
+									</div>
 									<Console {logs} />
 								</section>
 							</SplitPane>
@@ -726,6 +829,23 @@
 </div>
 
 <style lang="scss">
+	.slot-control-bar {
+		// background-color: #ffffffe6;
+		// width: ;
+		position: relative;
+
+		// background-color: red;
+		.container {
+			border-radius: 6px 6px 0px 0px;
+			padding: 0 10px 0 10px;
+			z-index: 1;
+			width: calc(100% - 20px);
+			height: 30px;
+			position: absolute;
+			display: flex;
+			align-items: center;
+		}
+	}
 	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 	.divi {
 		background-color: #52505817;

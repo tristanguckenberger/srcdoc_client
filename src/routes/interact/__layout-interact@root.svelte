@@ -1,4 +1,4 @@
-<script>
+<script lang='ts'>
 	import { clientWidth, isDarkModeStore, isVertical, showAuthModal, showPreferences } from '$lib/stores/layoutStore';
 	import Nav from '$lib/components/layout/Nav/index.svelte';
 	import Modal from '$lib/components/ui/Modal/index.svelte';
@@ -27,10 +27,17 @@
 	} from '$lib/stores/codeStore';
 	import { navigating, session } from '$app/stores';
 	import { showCreationModal } from '$lib/stores/modalStore';
+	import { destroyLogs, eventStoreLogHandler, messageEvent } from '$lib/stores/eventStore';
 	import { authOption } from '$lib/stores/authStore';
 	import { post as postUtil, get as getUtil, put as putUtil } from '$lib/utils.js';
 	import { goto } from '$app/navigation';
+	import type { Log } from '$lib/types/log';
+	import { onDestroy, onMount } from 'svelte';
+	// import {onMount }
 
+	  // Initial Declarations
+	let logs: Log[] = [];
+	let last_console_event;
 	let windowWidth;
 	let pageContainerWidth;
 	let leftPaneWidth;
@@ -68,6 +75,15 @@
 	$: isSignUp = $authOption === 1;
 	$: isVertical.set(value);
 	// isCreationStore.set(true);
+
+	onMount(() => {
+		window.addEventListener('message', handle_event, false);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('message', handle_event, false);
+		destroyLogs();
+	});
 
 	// THEMES ---------------------------------------------------------------------
 	let mainThemeBackgroundColor = 'ECECEC';
@@ -169,16 +185,16 @@
 		//   modalCreationBool = false;
 		//   goToLink();
 		// }
-		switch (selectedCreation) {
-		case 'Post':
-			modalCreationBool = false;
-			goToLink(2);
-			break;
-		case 'Creation':
-			modalCreationBool = false;
-			goToLink(1);
-			break;
-		}
+		// switch (selectedCreation) {
+		// case 'Post':
+		// 	modalCreationBool = false;
+		// 	goToLink(2);
+		// 	break;
+		// case 'Creation':
+		// 	modalCreationBool = false;
+		// 	goToLink(1);
+		// 	break;
+		// }
 	};
 	const verify = async () => {
 		const response = await getUtil(`/api/auth/verifyCode/${verificationCode}.json`);
@@ -210,6 +226,12 @@
 		} catch (error) {}
 	};
 
+  const handle_event = (event) => {
+	const { action, args } = event?.data;
+	if (action === 'console') {
+		eventStoreLogHandler($messageEvent, event?.data);
+	}
+  };
 
 </script>
 

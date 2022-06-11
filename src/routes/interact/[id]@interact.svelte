@@ -156,6 +156,7 @@
 	import { goto } from '$app/navigation';
 	import { creationStorePostCreationFunc, runSave } from '$lib/stores/creationFuncStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
+import { messageEvent } from '$lib/stores/eventStore';
 
 	let selectedTag = $postDetailStarter?.['tag'];
 
@@ -205,7 +206,7 @@
 	$: srcdoc = { html, css, js };
 
 	// Initial Declarations
-	let logs: Log[] = [];
+	let logs;
 	let last_console_event;
 	let pageContainerWidth = 0;
 	let pages;
@@ -226,6 +227,8 @@
 	let showLoader = false;
 
 	$: value = $isVertical;
+
+	$: logs = $messageEvent;
 </script>
 
 <div id="page-container" class:showLoader bind:clientWidth={pageContainerWidth}>
@@ -310,6 +313,9 @@
 		background-color: var(--mainThemePanelColor);
 		border-radius: 6px;
 		padding-left: 15px;
+	}
+	#split-console {
+		overflow-y: scroll;
 	}
 	.sticky-toggle {
 		margin-block-start: 0;

@@ -20,6 +20,17 @@
 		localCodeStoreJS,
 		triggerReset
 	} from '$lib/stores/codeStore';
+	import { destroyLogs, eventStoreLogHandler, messageEvent } from '$lib/stores/eventStore';
+	import { afterUpdate, onDestroy, onMount } from 'svelte';
+
+	onMount(() => {
+		window.addEventListener('message', handle_event, false);
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('message', handle_event, false);
+		destroyLogs();
+	});
 
 	let windowWidth;
 	let pageContainerWidth;
@@ -138,6 +149,13 @@
 		jsStore.set($currentPostPageRevert.js);
 
 		changingPage.set(true);
+	};
+
+	const handle_event = (event) => {
+		const { action, args } = event?.data;
+		if (action === 'console') {
+			eventStoreLogHandler($messageEvent, event?.data);
+		}
 	};
 </script>
 
