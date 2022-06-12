@@ -38,23 +38,23 @@
         method: 'GET'
       });
 
-      let res = await response.json();
+      let res = await response?.json();
 
-      const commentCode = res.data.map((x) => {
+      const commentCode = res?.data?.map((x) => {
         let components;
-        const rBody = x.replBody;
+        const rBody = x?.replBody;
         if (
           typeof rBody != 'undefined' &&
           rBody.hasOwnProperty('files') &&
-          typeof rBody.files != 'undefined'
+          typeof rBody?.files != 'undefined'
         ) {
-          components = Object.keys(rBody.files).map((key) => {
-            const n = rBody.files[key].name;
-            const joinerIndex = n.indexOf('.');
-            const type = n.includes('.') ? n.slice(joinerIndex + 1, n.length) : n;
-            const name = n.includes('.') ? n.slice(0, joinerIndex) : 'index';
-            const s = rBody.files[key].source;
-            const source = s.replace(/&lt;/gi, '<') || '';
+          components = Object.keys(rBody?.files)?.map((key) => {
+            const n = rBody?.files[key]?.name;
+            const joinerIndex = n?.indexOf('.');
+            const type = n?.includes('.') ? n?.slice(joinerIndex + 1, n.length) : n;
+            const name = n?.includes('.') ? n?.slice(0, joinerIndex) : 'index';
+            const s = rBody?.files[key]?.source;
+            const source = s?.replace(/&lt;/gi, '<') || '';
             return {
               type,
               name,
@@ -135,7 +135,7 @@
 
 {#if comments}
   {#if comments.hasOwnProperty('length') && comments.length > 0}
-    {#each comments as item, i (item.id)}
+    {#each comments as item, i (`${item?.id}_${i}`)}
       <div
         class="reply {item.hasOwnProperty('root') && item.root === true
           ? 'parentReply'
@@ -173,15 +173,10 @@
               <span class="info">@{item.username}</span>
             {/if}
           </a>
-
-          <!-- {#if item.isMember}<span class="isMember">member</span>{:else}
-                <span class="isMember">not member</span>
-            {/if} -->
           <span
             class="hide"
             on:click={() => {
               item.replyToggle = !item.replyToggle;
-              //   selectedItem = item._id;
             }}
           >
             {#if item.replyToggle}
@@ -197,6 +192,7 @@
                 class="post_cont_container"
                 class:replyHighlight={item.newReplyToggle === true}
               >
+              <!-- <span>{item?.id}</span> -->
                 <div class="post_cont">
                   {#if item.editToggle === true}
                     {#if $session}
@@ -213,12 +209,7 @@
                   {/if}
                 </div>
 
-                <!-- testing -->
-                <!-- {#if $session.token}
-                            <hr class="postDivider" />
-                        {/if} -->
                 <ul class="commentMenu">
-                  <!-- {#if $session.token} -->
                   <li class="vote">
                     <Vote itemID={item.id} isPost={false} />
                   </li>
@@ -226,44 +217,14 @@
                     <button
                       class="showRepl custom-button"
                       on:click={() => {
-                        // if (item.newReplyToggle === true) {
-                        // newReplyStore.set("");
-                        // }
-                        // if ($width < 768) {
-                        // if (item.newReplyToggle === true) {
-                        //     item.newReplyToggle = false;
-                        // }
-                        // item.newReplyToggle = !item.newReplyToggle;
-                        //     isNewCommentBooleanStore.set(false);
-
-                        // }
-
                         item.newReplyToggle = !item.newReplyToggle;
-                        // if ($width < 768) {
-                        // isNewReplyBooleanStore.set(!$isNewReplyBooleanStore);
-                        // passNewReplyData(item.newReplyToggle, slug, $user.uid, item._id, mods);
-                        // }
-                        // selectedItem = item._id;
-                        // if (item.newReplyToggle === true) {
-                        //   dispatch("new_reply_open", {
-                        //     text: "the new reply text box is open",
-                        //   });
-                        // }
                       }}
                     >
-                      <!-- {#if $width < 768}
-                                    {#if item.newReplyToggle === true && $isNewReplyBooleanStore === true}
-                                    Cancel Reply
-                                    {:else}
-                                    Reply
-                                    {/if}
-                                {:else} -->
                       {#if item.newReplyToggle === true}
                         Cancel Reply
                       {:else}
                         Reply
                       {/if}
-                      <!-- {/if} -->
                     </button>
                   </li>
 
@@ -273,7 +234,6 @@
                         class="showRepl custom-button"
                         on:click={() => {
                           item.editToggle = !item.editToggle;
-                          // selectedItem = item._id;
                         }}
                       >
                         {#if item.editToggle === true}
@@ -284,16 +244,6 @@
                       </button>
                     </li>
                   {/if}
-
-                  <!-- <li>
-                                {#if $user.uid === item.user}
-                                <DeleteReply PID={slug} CID={item._id} {mods} />
-                                {/if}
-                            </li> -->
-                  <!-- {#if item.user !== "000000000000000000000000"} -->
-
-                  <!-- {/if} -->
-                  <!-- {/if} -->
                   {#if item.hasOwnProperty('withRepl') && item.withRepl === true}
                     <li>
                       <button

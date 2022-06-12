@@ -177,6 +177,7 @@
 			cssStore.set($currentPostPage.css);
 			jsStore.set($currentPostPage.js);
 		}
+		fetchComments();
 	});
 
 	beforeNavigate((nav) => {});
@@ -304,6 +305,11 @@ import { messageEvent } from '$lib/stores/eventStore';
 			method: 'GET'
 		});
 		let res = await result.json();
+		console.log('=======');
+		console.log('=======');
+		console.log('=======');
+		console.log(res)
+		console.log('=======');
 		if (res.length > 0) {
 			postComments = [...res];
 			if (postComments) {
@@ -823,6 +829,7 @@ import { messageEvent } from '$lib/stores/eventStore';
 						</section>
 					</SplitPane>
 				</section>
+
 			</SplitPane>
 		</div>
 	{/if}

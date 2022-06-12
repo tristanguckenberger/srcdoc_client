@@ -9,6 +9,20 @@ export async function get({ params }) {
     // if (typeof parsed.error !== "undefined") {
     //   throw new Error(parsed.error);
     // }
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log(response)
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
+    console.log('==================')
 
     const postComments = response.data;
     let nested;

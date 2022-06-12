@@ -24,11 +24,11 @@
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
 
 	onMount(() => {
-		window.addEventListener('message', handle_event, false);
+		if(window) window.addEventListener('message', handle_event, false);
 	});
 
 	onDestroy(() => {
-		window.removeEventListener('message', handle_event, false);
+		if(window) window.removeEventListener('message', handle_event, false);
 		destroyLogs();
 	});
 
