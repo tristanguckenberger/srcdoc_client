@@ -74,14 +74,8 @@
 	$: modalCreationBool = $showCreationModal;
 	$: isSignUp = $authOption === 1;
 	$: isVertical.set(value);
-	// isCreationStore.set(true);
-
-	onMount(() => {
-		window.addEventListener('message', handle_event, false);
-	});
 
 	onDestroy(() => {
-		window.removeEventListener('message', handle_event, false);
 		destroyLogs();
 	});
 
@@ -235,7 +229,7 @@
 
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} />
+<svelte:window bind:innerWidth={windowWidth} on:message={handle_event}/>
 <div
 	class="interact"
 	style="

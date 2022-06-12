@@ -128,162 +128,163 @@
   };
 
   $: comments = postComment;
+
   $: userProfilePic = `https://storage.googleapis.com/omni-thumbnails/${
     $session?.user?.photo || $session?.photo
   }.png`;
+
 </script>
 
-{#if comments}
-  {#if comments.hasOwnProperty('length') && comments.length > 0}
-    {#each comments as item, i (`${item?.id}_${i}`)}
-      <div
-        class="reply {item.hasOwnProperty('root') && item.root === true
-          ? 'parentReply'
-          : 'childReply'}"
-        style="
-        width: calc(100% - 5px); float: right;
-    
-        "
-      >
-        <div class="info_left">
-          {#if item.photo && item.photo !== 'no-photo.jpg'}
-            <img
-              class="avatar"
-              src={'https://storage.googleapis.com/omni-thumbnails/' + item.photo + '.png'}
-              alt="profile pic"
-            />
-          {:else}
-            <img class="avatar" src="https://picsum.photos/30" alt="profile pic" />
-          {/if}
-          <div
-            class="guides"
-            on:click={() => {
-              item.replyToggle = !item.replyToggle;
-            }}
-          >
-            <div class="line" />
+
+  {#if comments?.length > 0}
+    {#each comments as item}
+     {#if item?.id && item?.username}
+        <div
+          class="reply {item?.root
+            ? 'parentReply'
+            : 'childReply'}"
+          style="
+          width: calc(100% - 5px); float: right;"
+        >
+          <div class="info_left">
+            {#if item?.photo !== 'no-photo.jpg'}
+              <img
+                class="avatar"
+                src={'https://storage.googleapis.com/omni-thumbnails/' + item.photo + '.png'}
+                alt="profile pic"
+              />
+            {:else}
+              <img class="avatar" src="https://picsum.photos/30" alt="profile pic" />
+            {/if}
+            <div
+              class="guides"
+              on:click={() => {
+                item.replyToggle = !item.replyToggle;
+              }}
+            >
+              <div class="line" />
+            </div>
           </div>
-        </div>
 
-        <div class="info_container">
-          <a href="/profiles/u/{item.user}">
-            {#if item.user.toString() === '000000000000000000000000'}
-              <span class="info">@deleted</span>
-            {:else}
-              <span class="info">@{item.username}</span>
-            {/if}
-          </a>
-          <span
-            class="hide"
-            on:click={() => {
-              item.replyToggle = !item.replyToggle;
-            }}
-          >
-            {#if item.replyToggle}
-              Show
-            {:else}
-              Hide
-            {/if}
-          </span>
-          {#if !item.replyToggle}
-            <div class="post_cont_container">
-              <div
-                class:updateToggle={item.editToggle}
-                class="post_cont_container"
-                class:replyHighlight={item.newReplyToggle === true}
-              >
-              <!-- <span>{item?.id}</span> -->
-                <div class="post_cont">
-                  {#if item.editToggle === true}
-                    {#if $session}
-                      <br />
-                      <UpdateComment
-                        comment={item}
-                        setCode={setRepl}
-                        bind:editing={item.editToggle}
-                      />
-                      <br />
-                    {/if}
-                  {:else}
-                    <p class="reg_text" style="">{item.text}</p>
-                  {/if}
-                </div>
-
-                <ul class="commentMenu">
-                  <li class="vote">
-                    <Vote itemID={item.id} isPost={false} />
-                  </li>
-                  <li>
-                    <button
-                      class="showRepl custom-button"
-                      on:click={() => {
-                        item.newReplyToggle = !item.newReplyToggle;
-                      }}
-                    >
-                      {#if item.newReplyToggle === true}
-                        Cancel Reply
-                      {:else}
-                        Reply
+          <div class="info_container">
+            <a href="/profiles/u/{item.user}">
+              {#if item?.user?.toString() === '000000000000000000000000'}
+                <span class="info">@deleted</span>
+              {:else}
+                <span class="info">@{item?.username}</span>
+              {/if}
+            </a>
+            <span
+              class="hide"
+              on:click={() => {
+                item.replyToggle = !item.replyToggle;
+              }}
+            >
+              {#if item?.replyToggle}
+                Show
+              {:else}
+                Hide
+              {/if}
+            </span>
+            {#if !item?.replyToggle}
+              <div class="post_cont_container">
+                <div
+                  class:updateToggle={item.editToggle}
+                  class="post_cont_container"
+                  class:replyHighlight={item.newReplyToggle === true}
+                >
+                  <div class="post_cont">
+                    {#if item?.editToggle === true}
+                      {#if $session}
+                        <br />
+                        <UpdateComment
+                          comment={item}
+                          setCode={setRepl}
+                          bind:editing={item.editToggle}
+                        />
+                        <br />
                       {/if}
-                    </button>
-                  </li>
+                    {:else}
+                      <p class="reg_text" style="">{item.text}</p>
+                    {/if}
+                  </div>
 
-                  {#if $session}
+                  <ul class="commentMenu">
+                    <li class="vote">
+                      <Vote itemID={item.id} isPost={false} />
+                    </li>
                     <li>
                       <button
                         class="showRepl custom-button"
                         on:click={() => {
-                          item.editToggle = !item.editToggle;
+                          item.newReplyToggle = !item.newReplyToggle;
                         }}
                       >
-                        {#if item.editToggle === true}
-                          Cancel Edit
+                        {#if item?.newReplyToggle === true}
+                          Cancel Reply
                         {:else}
-                          Edit
+                          Reply
                         {/if}
                       </button>
                     </li>
-                  {/if}
-                  {#if item.hasOwnProperty('withRepl') && item.withRepl === true}
-                    <li>
-                      <button
-                        class="showRepl custom-button"
-                        on:click={() => {
-                          setRepl(item.id);
+
+                    {#if $session}
+                      <li>
+                        <button
+                          class="showRepl custom-button"
+                          on:click={() => {
+                            item.editToggle = !item.editToggle;
+                          }}
+                        >
+                          {#if item.editToggle === true}
+                            Cancel Edit
+                          {:else}
+                            Edit
+                          {/if}
+                        </button>
+                      </li>
+                    {/if}
+                    {#if item.hasOwnProperty('withRepl') && item.withRepl === true}
+                      <li>
+                        <button
+                          class="showRepl custom-button"
+                          on:click={() => {
+                            setRepl(item.id);
+                          }}
+                        >
+                          View Code
+                        </button>
+                      </li>
+                    {/if}
+                  </ul>
+
+                  <div class="reply_indent">
+                    {#if item.newReplyToggle === true}
+                      <NewComment
+                        postId={$currentPost.id}
+                        parentId={item.id}
+                        tag={['Reply']}
+                        on:commentPosted={() => {
+                          fetchComments();
                         }}
-                      >
-                        View Code
-                      </button>
-                    </li>
-                  {/if}
-                </ul>
+                      />
+                    {/if}
 
-                <div class="reply_indent">
-                  {#if item.newReplyToggle === true}
-                    <NewComment
-                      postId={$currentPost.id}
-                      parentId={item.id}
-                      tag={['Reply']}
-                      on:commentPosted={() => {
-                        fetchComments();
-                      }}
-                    />
-                  {/if}
-
-                  {#if item.hasOwnProperty('children')}
-                    <svelte:self {mods} postComment={item.children} {slug} {fetchComments} />
-                  {/if}
+                    {#if item.hasOwnProperty('children')}
+                      <svelte:self {mods} postComment={item.children} {slug} {fetchComments} />
+                    {/if}
+                  </div>
                 </div>
               </div>
-            </div>
-          {/if}
+            {/if}
+          </div>
         </div>
-      </div>
+      {/if}
     {:else}
       no comments found
     {/each}
   {/if}
-{/if}
+
 
 <style>
   .reply {

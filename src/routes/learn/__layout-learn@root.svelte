@@ -23,12 +23,7 @@
 	import { destroyLogs, eventStoreLogHandler, messageEvent } from '$lib/stores/eventStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
 
-	onMount(() => {
-		if(window) window.addEventListener('message', handle_event, false);
-	});
-
 	onDestroy(() => {
-		if(window) window.removeEventListener('message', handle_event, false);
 		destroyLogs();
 	});
 
@@ -159,7 +154,7 @@
 	};
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} />
+<svelte:window bind:innerWidth={windowWidth} on:message={handle_event}/>
 <div
 	class="learn"
 	style="

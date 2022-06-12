@@ -52,7 +52,6 @@
 					rBody.hasOwnProperty('files') &&
 					typeof rBody?.files != 'undefined'
 				) {
-					console.log(rBody);
 					components = Object.keys(rBody?.files).map((key) => {
 						const n = rBody.files[key].name;
 						const joinerIndex = n.indexOf('.');
@@ -105,9 +104,6 @@
 					js
 				};
 			});
-
-			// console.log(postOBJ);
-
 			initialPostData.set(postOBJ);
 			currentPost.set(postOBJ);
 			currentPostPage.set(postOBJ.pages[0]);
@@ -227,7 +223,7 @@
 
 	// Stores
 	import { showCaptureThumbnail } from '$lib/stores/codeStore.js';
-import { messageEvent } from '$lib/stores/eventStore';
+	import { messageEvent } from '$lib/stores/eventStore';
 
 	// Props
 	export let posts;
@@ -279,6 +275,8 @@ import { messageEvent } from '$lib/stores/eventStore';
 	$: toggleUpdateCodeWithPost.set(attachCode);
 	$: page = $currentPostPage;
 	$: logs = $messageEvent;
+	let nested;
+	// $: comments = nested
 
 	// Life Cycle Methods
 	let fetchCount = 0;
@@ -297,21 +295,104 @@ import { messageEvent } from '$lib/stores/eventStore';
 		currentPostPage.set($currentPost.pages[$currentPost.pages.length - 1]);
 		triggerReset.set(true);
 	};
+
+    function sortComments(unsortedComments) {
+
+	console.log('unsortedComments')
+	console.log(unsortedComments)
+		if (unsortedComments?.length > 0) {
+			unsortedComments?.map((x) => {
+				x.isMember = false;
+				return x;
+			});
+			let updateCL = unsortedComments?.slice();
+			updateCL?.forEach((comment) => {
+				if (!comment?.parentId) comment.parentId = null;
+			});
+			nested = updateCL?.reduce(
+				(initial, value, index, original) => {
+					if (value?.parentId) {
+						console.log('parent found?')
+						let parentFound = findParent(initial?.nested, value);
+						if (parentFound) {
+							console.log('parent found.')
+							checkLeftOvers(initial?.left, value);
+						} else {
+							initial?.left?.push(value);
+						}
+					} else {
+						console.log('no parent found')
+						if (initial?.left?.length) {
+							checkLeftOvers(initial?.left, value);
+						}
+						delete value?.parentId;
+						value.root = true;
+						initial?.nested?.push(value);
+					}
+					return index < original?.length - 1 ? initial : initial?.nested;
+				},
+				{ nested: [], left: [] }
+			);
+
+			return nested;
+		}
+    }
+
+    function checkLeftOvers(leftOvers, possibleParent) {
+      let leftOversLen = leftOvers?.length;
+      let parentChildren = possibleParent?.children || [];
+
+      for (let i = 0; i < leftOversLen; i++) {
+        if (leftOvers[i]?.parentId === possibleParent?.id) {
+			delete leftOvers[i]?.parentId;
+			parentChildren
+				? parentChildren?.push(leftOvers[i])
+				: (parentChildren = [leftOvers[i]]);
+			possibleParent.count = parentChildren.length;
+			const addedObj = leftOvers.splice(i, 1);
+			console.log(addedObj)
+			checkLeftOvers(leftOvers, addedObj[0]);
+        }
+      }
+    }
+
+    function findParent(possibleParents, possibleChild) {
+      let possibleParent = possibleChild?.parentId;
+      let found = false;
+      for (let i = 0; i < possibleParents?.length; i++) {
+		  console.log(possibleParents[i]?.id === possibleParent)
+        if (possibleParents[i]?.id === possibleParent) {
+          found = true;
+		  try {
+			delete possibleChild?.parentId;
+		  } catch (error) {
+			  console.error(error)
+		  }
+          
+          if (possibleParents[i]?.children) {
+            possibleParents[i]?.children?.push(possibleChild);
+          } else {
+            possibleParents[i].children = [possibleChild];
+            possibleParents[i].count = possibleParents[i]?.children?.length;
+            return true;
+          } 
+        } else if (possibleParents[i].children)
+          found = findParent(possibleParents[i].children, possibleChild);
+      }
+      return found;
+    }
+
+	
 	const fetchComments = async () => {
 		fetchCount++;
-		// console.log(`${fetchCount}____________fetchComments`);
 		const url = `../../api/comment/getComments/${$currentPost.id}.json`;
 		const result = await fetch(url, {
 			method: 'GET'
 		});
 		let res = await result.json();
-		console.log('=======');
-		console.log('=======');
-		console.log('=======');
-		console.log(res)
-		console.log('=======');
-		if (res.length > 0) {
-			postComments = [...res];
+		const nestedResult = sortComments(res);
+		if (nestedResult.length > 0) {
+			postComments = [...nestedResult];
 			if (postComments) {
 				getCommentsSwitch = false;
 			}
@@ -352,7 +433,6 @@ import { messageEvent } from '$lib/stores/eventStore';
 			let updatedPage = { ...page };
 			updatedPage.text = page.description;
 			delete updatedPage.description;
-			// console.log(updatedPage);
 			return updatedPage;
 		});
 
@@ -361,18 +441,10 @@ import { messageEvent } from '$lib/stores/eventStore';
 			pid
 		};
 
-		// try {
 		const response = await putUtil(url, data);
-
 		if (response.status !== 200) return;
 
 		editing = false;
-
-		// fetchUpdatedData(pid);
-		// goto("/");
-		// } catch (error) {
-		//     console.log(error);
-		// }
 	};
 	const fetchUpdatedData = async (pid) => {
 		const postURL = `/api/post/getSinglePost/${pid}.json`;
@@ -508,7 +580,7 @@ import { messageEvent } from '$lib/stores/eventStore';
 		const { target } = currentChild;
 		const parentSplit = target.closest('.split');
 		const parentSection = target.closest('section');
-		console.log();
+		// console.log();
 		const children = parentSplit.children;
 
 		const childCountTotal = parentSplit.childElementCount;
@@ -516,7 +588,7 @@ import { messageEvent } from '$lib/stores/eventStore';
 			[...children].filter((child) => child?.classList.contains('gutter')).length ?? 0;
 		const adjustedChildCount = childCountTotal - gutterCount;
 		[...children].forEach((child) => {
-			console.log(parentSection == child);
+			// console.log(parentSection == child);
 
 			if (parentSection == child) {
 				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(${
@@ -528,10 +600,6 @@ import { messageEvent } from '$lib/stores/eventStore';
 		});
 
 		const parentParentSplit = parentSplit.closest('.split');
-		if (parentParentSplit) {
-			console.log('parentParentSplit:');
-			console.log(parentParentSplit);
-		}
 	};
 	let paneOneSize = 30; // This is the page pane
 	let paneTwoSize = 70; // This is the editor and output pane cluster
@@ -678,12 +746,12 @@ import { messageEvent } from '$lib/stores/eventStore';
 								</div>
 							{:else}
 								<div class="post-top-info">
-									{#if ($session && $session.id && $session.id === $currentPost.authorID) || ($session && $session.user && $session.user.id && $session.user.id === $currentPost.authorID)}
+									{#if ($session?.id === $currentPost?.authorID) || ($session?.user?.id === $currentPost?.authorID)}
 										<button on:click={() => (editing = true)}>Edit</button>
 									{/if}
 								</div>
 
-								<h1>{page.pageTitle || page.title}</h1>
+								<h1>{page?.pageTitle || page?.title}</h1>
 								{#if $postAuthor}
 									<div class="author-info">
 										<div class="author-img" />
