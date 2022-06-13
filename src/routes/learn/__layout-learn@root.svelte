@@ -494,4 +494,21 @@
 	:global(.learn .left-panel) {
 		display: none;
 	}
+
+	:global(#split-2 .split.vertical) {
+
+			display: flex !important;
+			flex-direction: column !important;
+
+			#split-js {
+				flex-grow: 1 !important;
+			}
+
+	}
+
+	@media only screen and (min-width: 1500px) {
+		:global(#split-js) {
+				flex-grow: 1 !important;
+		}
+	}
 </style>
