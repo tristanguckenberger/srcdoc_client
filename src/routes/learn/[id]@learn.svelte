@@ -116,7 +116,7 @@
 <script lang="ts">
 	import { clientWidth } from '$lib/stores/layoutStore';
 	import SplitPane from '$lib/components/layout/SplitPane/index.svelte';
-	import { fade } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import Editor from '$lib/components/ui/Editor/index.svelte';
 	import Output from '$lib/components/ui/Output/index.svelte';
 	import Console from '$lib/components/ui/Console/index.svelte';
@@ -150,6 +150,8 @@
 	$: currentPage = $currentPostPage;
 
 	$: post = $currentPost;
+
+	$: postContainerWidth = contentWidth;
 
 	$: $currentPostPage,
 		($currentPost.currentPageID =
@@ -568,6 +570,8 @@
 	let splitFive = null;
 	let splitSix = null;
 	let splitSeven = null;
+	let splitOneWidth = null;
+	$: cacldSplitOneWidth = splitOneWidth;
 
 	const maximize = async (currentChild, isVertical = false) => {
 		/*
@@ -604,6 +608,8 @@
 	let paneOneSize = 30; // This is the page pane
 	let paneTwoSize = 70; // This is the editor and output pane cluster
 	let paneThreeSize; // This is the editor pane cluster
+
+	let postContent;
 </script>
 
 <div id="page-container" class:showLoader bind:clientWidth={pageContainerWidth}>
@@ -611,12 +617,12 @@
 		<div class:showLoader bind:this={splitPaneContainer} class="split-container">
 			<SplitPane panes={['#split-0', '#split-1']} sizes={[paneOneSize, paneTwoSize]}>
 				<!-- Page Content -->
-				<section id="split-0" bind:this={splitOne}>
+				<section id="split-0" bind:this={splitOne} bind:clientWidth={splitOneWidth}>
 					<div class="slot-control-bar">
 						<div class="container">page</div>
 					</div>
 					<div class="post-contentContainer" style="--contentWidth: calc({contentWidth}px - 2rem);">
-						<div class="post-content" bind:clientWidth={contentWidth}>
+						<div class="post-content" bind:clientWidth={contentWidth} bind:this={postContent}>
 							{#if editing}
 								<label for="" class="toggle">
 									<h3
@@ -791,12 +797,15 @@
 									>
 								</div>
 							{:else}
-								<div class="post-control-bar">
-									<Vote itemID={$currentPost.id} isPost={true} />
-									<button class="comment-button" on:click={() => (showCreateComment = true)}
-										>Comment</button
-									>
-								</div>
+								{console.log(cacldSplitOneWidth)}
+								{#if cacldSplitOneWidth > 400}
+									<div class="post-control-bar" in:fade out:fade="{{ duration: 100 }}">
+										<Vote itemID={$currentPost.id} isPost={true} />
+										<button class="comment-button" on:click={() => (showCreateComment = true)}
+											>Comment</button
+										>
+									</div>
+								{/if}
 							{/if}
 							<hr />
 
