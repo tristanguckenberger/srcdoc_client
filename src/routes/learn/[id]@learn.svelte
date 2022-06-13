@@ -15,7 +15,7 @@
 	export async function load({ params, fetch }) {
 		isCreationStore.set(true);
 		const postSlug = params?.id;
-
+		commentHydrator.load(postSlug);
 		const postURL = `/api/post/getSinglePost/${postSlug}.json`;
 		const projectURL = `/api/project/getAllProjectsForPost/${postSlug}.json`;
 		const res = await fetch(postURL, {
@@ -108,7 +108,9 @@
 			currentPost.set(postOBJ);
 			currentPostPage.set(postOBJ.pages[0]);
 
-			return {};
+			return {
+				postSlug
+			};
 		}
 	}
 </script>
@@ -143,8 +145,13 @@
 	import { creationStorePostCreationFunc, runSave } from '$lib/stores/creationFuncStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
 
+	let hydratedComments;
+	const hydratedCommentsUnsubber = commentHydrator.subscribe(x => hydratedComments = JSON.parse(JSON.stringify(x)));
 	let selectedTag = $postDetailStarter.tag;
 	let contentWidth;
+
+
+	$: console.log(hydratedComments)
 
 	let currentPage;
 	$: currentPage = $currentPostPage;
@@ -174,13 +181,14 @@
 			htmlStore.set($currentPostPage.html);
 			cssStore.set($currentPostPage.css);
 			jsStore.set($currentPostPage.js);
-		}
-		fetchComments();
+		}	
 	});
 
 	beforeNavigate((nav) => {});
 
-	onDestroy(() => {});
+	onDestroy(() => {
+		hydratedCommentsUnsubber();
+	});
 
 	$: windowWidth = $clientWidth;
 	$: html = $htmlStore;
@@ -226,6 +234,7 @@
 	// Stores
 	import { showCaptureThumbnail } from '$lib/stores/codeStore.js';
 	import { messageEvent } from '$lib/stores/eventStore';
+	import { commentHydrator } from '$lib/stores/hydrator';
 
 	// Props
 	export let posts;
@@ -233,6 +242,7 @@
 	export let postOBJ;
 	export let authorID;
 	export let createdAt;
+	export let postSlug;
 	let postComments;
 
 	// Initial Declarations
@@ -797,9 +807,8 @@
 									>
 								</div>
 							{:else}
-								{console.log(cacldSplitOneWidth)}
 								{#if cacldSplitOneWidth > 400}
-									<div class="post-control-bar" in:fade out:fade="{{ duration: 100 }}">
+									<div class="post-control-bar">
 										<Vote itemID={$currentPost.id} isPost={true} />
 										<button class="comment-button" on:click={() => (showCreateComment = true)}
 											>Comment</button
@@ -809,11 +818,11 @@
 							{/if}
 							<hr />
 
-							{#if postComments}
+							{#if hydratedComments}
 								<div class="comments" bind:this={commentsOBJ}>
 									<Reply
 										{mods}
-										bind:postComment={postComments}
+										bind:postComment={hydratedComments}
 										expanded={false}
 										slug={$currentPost.id}
 										{fetchComments}
