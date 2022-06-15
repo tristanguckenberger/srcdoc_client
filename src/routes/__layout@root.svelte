@@ -470,6 +470,7 @@
 		border-radius: 6px !important;
 	}
 	.section-panel {
+		flex-grow: 1;
 		border-radius: 6px;
 		background-color: var(--mainThemePanelColor);
 	}

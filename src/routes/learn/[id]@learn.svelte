@@ -15,7 +15,7 @@
 	export async function load({ params, fetch }) {
 		isCreationStore.set(true);
 		const postSlug = params?.id;
-		commentHydrator.load(postSlug);
+		commentHydrator.reload(postSlug);
 		const postURL = `/api/post/getSinglePost/${postSlug}.json`;
 		const projectURL = `/api/project/getAllProjectsForPost/${postSlug}.json`;
 		const res = await fetch(postURL, {
@@ -116,12 +116,13 @@
 </script>
 
 <script lang="ts">
-	import { clientWidth } from '$lib/stores/layoutStore';
+	import { clientWidth, isVertical, editorContainerHeight, editorContainerWidth, editorOutContainerWidth, editorOutContainerHeight } from '$lib/stores/layoutStore';
 	import SplitPane from '$lib/components/layout/SplitPane/index.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import Editor from '$lib/components/ui/Editor/index.svelte';
 	import Output from '$lib/components/ui/Output/index.svelte';
 	import Console from '$lib/components/ui/Console/index.svelte';
+	import Pane from '$lib/components/layout/EditorLayouts/Base/Pane.svelte';
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		selectedStore,
@@ -144,6 +145,7 @@
 	import { goto } from '$app/navigation';
 	import { creationStorePostCreationFunc, runSave } from '$lib/stores/creationFuncStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
+	// import { slotControlRotator } from '$lib/actions/slotControlRotator';
 
 	let hydratedComments;
 	const hydratedCommentsUnsubber = commentHydrator.subscribe(x => hydratedComments = JSON.parse(JSON.stringify(x)));
@@ -195,6 +197,7 @@
 	$: css = $cssStore;
 	$: js = $jsStore;
 	$: srcdoc = { html, css, js };
+	$: value = $isVertical;
 
 	// Initial Declarations
 	let logs: Log[] = [];
@@ -205,7 +208,7 @@
 	let editorVisible = false;
 	let isPost;
 	let collectives;
-	let value: boolean = false; //  Layout Toggle
+	// let value: boolean = false; //  Layout Toggle
 	let showEditorSettings: boolean = false;
 	let pageSelector;
 	let authPageRowSizeValue = '';
@@ -308,107 +311,8 @@
 		triggerReset.set(true);
 	};
 
-    function sortComments(unsortedComments) {
-
-	console.log('unsortedComments')
-	console.log(unsortedComments)
-		if (unsortedComments?.length > 0) {
-			unsortedComments?.map((x) => {
-				x.isMember = false;
-				return x;
-			});
-			let updateCL = unsortedComments?.slice();
-			updateCL?.forEach((comment) => {
-				if (!comment?.parentId) comment.parentId = null;
-			});
-			nested = updateCL?.reduce(
-				(initial, value, index, original) => {
-					if (value?.parentId) {
-						console.log('parent found?')
-						let parentFound = findParent(initial?.nested, value);
-						if (parentFound) {
-							console.log('parent found.')
-							checkLeftOvers(initial?.left, value);
-						} else {
-							initial?.left?.push(value);
-						}
-					} else {
-						console.log('no parent found')
-						if (initial?.left?.length) {
-							checkLeftOvers(initial?.left, value);
-						}
-						delete value?.parentId;
-						value.root = true;
-						initial?.nested?.push(value);
-					}
-					return index < original?.length - 1 ? initial : initial?.nested;
-				},
-				{ nested: [], left: [] }
-			);
-
-			return nested;
-		}
-    }
-
-    function checkLeftOvers(leftOvers, possibleParent) {
-      let leftOversLen = leftOvers?.length;
-      let parentChildren = possibleParent?.children || [];
-
-      for (let i = 0; i < leftOversLen; i++) {
-        if (leftOvers[i]?.parentId === possibleParent?.id) {
-			delete leftOvers[i]?.parentId;
-			parentChildren
-				? parentChildren?.push(leftOvers[i])
-				: (parentChildren = [leftOvers[i]]);
-			possibleParent.count = parentChildren.length;
-			const addedObj = leftOvers.splice(i, 1);
-			console.log(addedObj)
-			checkLeftOvers(leftOvers, addedObj[0]);
-        }
-      }
-    }
-
-    function findParent(possibleParents, possibleChild) {
-      let possibleParent = possibleChild?.parentId;
-      let found = false;
-      for (let i = 0; i < possibleParents?.length; i++) {
-		  console.log(possibleParents[i]?.id === possibleParent)
-        if (possibleParents[i]?.id === possibleParent) {
-          found = true;
-		  try {
-			delete possibleChild?.parentId;
-		  } catch (error) {
-			  console.error(error)
-		  }
-          
-          if (possibleParents[i]?.children) {
-            possibleParents[i]?.children?.push(possibleChild);
-          } else {
-            possibleParents[i].children = [possibleChild];
-            possibleParents[i].count = possibleParents[i]?.children?.length;
-            return true;
-          } 
-        } else if (possibleParents[i].children)
-          found = findParent(possibleParents[i].children, possibleChild);
-      }
-      return found;
-    }
-
-	
 	const fetchComments = async () => {
-		fetchCount++;
-		const url = `../../api/comment/getComments/${$currentPost.id}.json`;
-		const result = await fetch(url, {
-			method: 'GET'
-		});
-		let res = await result.json();
-		const nestedResult = sortComments(res);
-		if (nestedResult.length > 0) {
-			postComments = [...nestedResult];
-			if (postComments) {
-				getCommentsSwitch = false;
-			}
-		}
+		commentHydrator.reload(postSlug);
 	};
 
 	// Fetch Funcs
@@ -562,17 +466,12 @@
 		return { html, css, js };
 	};
 	let showCreateComment = false;
-	// let contentWidth;
 	$: showCaptureThumbnail.set(editing);
-
 	$: dateCreated = new Date(createdAt);
-
 	const now = new Date();
-
 	// let daysTimePass = now.getTime() - dateCreated.getTime();
 	$: daysPassed = new Date().getTime() - dateCreated.getTime();
 	$: totalDays = Math.floor(daysPassed / (1000 * 3600 * 24));
-
 	let splitOne = null;
 	let splitTwo = null;
 	let splitThree = null;
@@ -581,11 +480,14 @@
 	let splitSix = null;
 	let splitSeven = null;
 	let splitOneWidth = null;
+	let splitOutput = null;
+	let splitConsole = null;
 	$: cacldSplitOneWidth = splitOneWidth;
 
 	const maximize = async (currentChild, isVertical = false) => {
 		/*
 		 * Steps for Maximizing a pane a user clicks
+		 * Record full width or height
 		 * 1. Determine nearest parent #Split-<num here>
 		 * 2. Get all children including self
 		 * 3. Check if vertical
@@ -595,21 +497,26 @@
 		const parentSplit = target.closest('.split');
 		const parentSection = target.closest('section');
 		// console.log();
-		const children = parentSplit.children;
+		const children = parentSplit?.children;
 
-		const childCountTotal = parentSplit.childElementCount;
+		const childCountTotal = parentSplit?.childElementCount;
 		const gutterCount =
-			[...children].filter((child) => child?.classList.contains('gutter')).length ?? 0;
+			[...children].filter((child) => child?.classList?.contains('gutter'))?.length ?? 0;
 		const adjustedChildCount = childCountTotal - gutterCount;
-		[...children].forEach((child) => {
-			// console.log(parentSection == child);
 
+		[...children]?.forEach((child) => {
+			console.log('parentSplit')
+			console.log(parentSplit.clientWidth)
 			if (parentSection == child) {
-				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(${
-					adjustedChildCount > 2 ? 80 : 90
-				}% - 5px)`;
-			} else if (parentSection != child && !child?.classList.contains('gutter')) {
-				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(10% - 5px)`;
+				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(100% - ${((isVertical ?  30 : 30)*(adjustedChildCount - 1)) + (((adjustedChildCount - 1))*10)}px)`;
+				if (!isVertical) {
+					child.querySelector('.slot-control-bar .container').style.transform = 'rotate(0deg)';
+				}
+			} else if (parentSection != child && !child?.classList?.contains('gutter')) {
+				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(${(isVertical ? 30 : 30)}px)`;
+				if (!isVertical) {
+					child.querySelector('.slot-control-bar .container').style.transform = 'rotate(90deg)';
+				}
 			}
 		});
 
@@ -620,6 +527,7 @@
 	let paneThreeSize; // This is the editor pane cluster
 
 	let postContent;
+
 </script>
 
 <div id="page-container" class:showLoader bind:clientWidth={pageContainerWidth}>
@@ -628,9 +536,9 @@
 			<SplitPane panes={['#split-0', '#split-1']} sizes={[paneOneSize, paneTwoSize]}>
 				<!-- Page Content -->
 				<section id="split-0" bind:this={splitOne} bind:clientWidth={splitOneWidth}>
-					<div class="slot-control-bar">
+					<!-- <div class="slot-control-bar">
 						<div class="container">page</div>
-					</div>
+					</div> -->
 					<div class="post-contentContainer" style="--contentWidth: calc({contentWidth}px - 2rem);">
 						<div class="post-content" bind:clientWidth={contentWidth} bind:this={postContent}>
 							{#if editing}
@@ -837,80 +745,33 @@
 				<section id="split-1" style="z-index: 1000000000;" bind:this={splitTwo}>
 					<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
 						<!-- Editor Content -->
-						<section id="split-2" bind:this={splitThree}>
+						<section id="split-2" bind:this={splitThree} bind:clientWidth={$editorContainerWidth} bind:clientHeight={$editorContainerHeight}>
 							<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
-								<section
-									id="split-html"
-									class="section-panel"
-									style="overflow-x: visible;"
-									bind:this={splitFive}
-								>
-									{#if html}
-										<div
-											class="slot-control-bar"
-											on:dblclick={(e) => {
-												maximize(e, !value);
-											}}
-										>
-											<div class="container">html</div>
-										</div>
-										<Editor code={html} />
-									{/if}
-								</section>
-								<section
-									id="split-css"
-									class="section-panel"
-									style="overflow-x: visible;"
-									bind:this={splitSix}
-								>
-									<div
-										class="slot-control-bar"
-										on:dblclick={(e) => {
-											maximize(e, !value);
-										}}
-									>
-										<div class="container">css</div>
-									</div>
-									<Editor code={css} />
-								</section>
-								<section
-									id="split-js"
-									class="section-panel"
-									style="overflow-x: visible;"
-									bind:this={splitSeven}
-								>
-									<div
-										class="slot-control-bar"
-										on:dblclick={(e) => {
-											maximize(e, !value);
-										}}
-									>
-										<div class="container">js</div>
-									</div>
-									<Editor code={js} />
-								</section>
+								<Pane id={'split-html'} label={'html'}>
+									<Editor slot="pane-content" code={html}/>
+								</Pane>
+								<Pane id={'split-css'} label={'css'}>
+									<Editor slot="pane-content" code={css}/>
+								</Pane>
+								<Pane id={'split-js'} label={'js'}>
+									<Editor slot="pane-content" code={js}/>
+								</Pane>
 							</SplitPane>
 						</section>
 
 						<!-- Output Content -->
-						<section id="split-3" bind:this={splitFour}>
+						<section id="split-3" bind:this={splitFour} bind:clientWidth={$editorOutContainerWidth} bind:clientHeight={$editorOutContainerHeight}>
 							<SplitPane
 								panes={['#split-output', '#split-console']}
 								vertical={!value}
 								sizes={[100, 0]}
 							>
-								<section id="split-output" class="section-panel">
-									<div class="slot-control-bar">
-										<div class="container">output</div>
-									</div>
-									<Output {srcdoc} />
-								</section>
-								<section id="split-console" class="section-panel">
-									<div class="slot-control-bar">
-										<div class="container">console</div>
-									</div>
-									<Console {logs} />
-								</section>
+								<Pane id={'split-output'} label={'output'}>
+									<Output slot="pane-content" {srcdoc} />
+								</Pane>
+								<Pane id={'split-console'} label={'console'}>
+									<Console slot="pane-content" {logs} />
+								</Pane>
 							</SplitPane>
 						</section>
 					</SplitPane>
@@ -922,23 +783,14 @@
 </div>
 
 <style lang="scss">
-	.slot-control-bar {
-		// background-color: #ffffffe6;
-		// width: ;
-		position: relative;
-
-		// background-color: red;
-		.container {
-			border-radius: 6px 6px 0px 0px;
-			padding: 0 10px 0 10px;
-			z-index: 1;
-			width: calc(100% - 20px);
-			height: 30px;
-			position: absolute;
-			display: flex;
-			align-items: center;
-		}
+	:global(.gutter) {
+		min-width: 10px;
+		min-height: 10px;
 	}
+	section#split-1 {
+		min-width: 110px;
+	}
+
 	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 	.divi {
 		background-color: #52505817;
@@ -979,8 +831,10 @@
 		border-radius: 6px !important;
 	}
 	.section-panel {
+		flex-grow: 1;
 		border-radius: 6px;
 		background-color: var(--mainThemePanelColor);
+		min-width: 30px;
 	}
 	#split-0 {
 		background-color: var(--mainThemePanelColor);

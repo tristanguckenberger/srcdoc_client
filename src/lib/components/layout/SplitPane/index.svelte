@@ -5,27 +5,25 @@
 	import { clearSplit, splitStore } from '$lib/stores/splitStore';
 	import Split from 'split.js';
 	import { page } from '$app/stores';
+	import { paneMinHeightModifier } from '$lib/stores/layoutStore';
 	export let panes: string[];
 	export let sizes: number[] = null;
 	export let vertical: boolean = false;
 
 	let splitInstance: Split.Instance;
 
-	$: authPage = $page.url.pathname === '/auth';
-
-	// $: if ($clearSplit) {
-	//   reloadSplit();
-	// }
+	// $: authPage = $page.url.pathname === '/auth';
 
 	const reloadSplit = () => {
 		// Destory existing splitInstance
-		if (splitInstance && !authPage) splitInstance.destroy(false, false);
+		if (splitInstance) splitInstance.destroy(false, false);
 
 		// Init a new split instance
 		splitInstance = Split(panes, {
 			direction: vertical ? 'vertical' : 'horizontal',
 			gutterSize: 10,
-			sizes
+			sizes,
+			minSize: $paneMinHeightModifier
 		});
 	};
 
@@ -54,6 +52,8 @@
 		// Init Split.js
 		setTimeout(() => reloadSplit(), 50);
 	}
+
+	// $: if (split && $paneMinHeightModifier) reloadSplit();
 </script>
 
 <div class="split {vertical ? 'vertical' : ''}" bind:this={split}>

@@ -1,5 +1,5 @@
 <script>
-	import { clientWidth, isDarkModeStore } from '$lib/stores/layoutStore';
+	import { clientWidth, isDarkModeStore, isVertical, showAuthModal, showPreferences } from '$lib/stores/layoutStore';
 	import Nav from '$lib/components/layout/Nav/index.svelte';
 	import { navigating, session } from '$app/stores';
 	import {
@@ -22,6 +22,14 @@
 	} from '$lib/stores/codeStore';
 	import { destroyLogs, eventStoreLogHandler, messageEvent } from '$lib/stores/eventStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
+	import { showCreationModal } from '$lib/stores/modalStore';
+	import { authOption } from '$lib/stores/authStore';
+	import SignIn from '$lib/components/auth/SignIn/index.svelte';
+	import SignUp from '$lib/components/auth/SignUp/index.svelte';
+	import Modal from '$lib/components/ui/Modal/index.svelte';
+	import VerifyEmail from '$lib/components/auth/VerifyEmail/index.svelte';
+	import CustomToggle from '$lib/components/ui/CustomToggle/index.svelte';
+
 
 	onDestroy(() => {
 		destroyLogs();
@@ -152,6 +160,36 @@
 			eventStoreLogHandler($messageEvent, event?.data);
 		}
 	};
+	let last_console_event;
+	let showUserEditModal = false;
+	let value = false; //  Layout Toggle
+	let email = '';
+	let error = '*';
+	let password = '';
+	let passwordConf = '';
+	let username = '';
+	let verificationCode = '';
+	let options = ['Creation', 'Post', 'Project', 'Collective'];
+	let selectedCreation;
+	let currentPostTitle = '';
+  	let currentPostBlurb = '';
+	let selectedTag;
+	let autions = [SignIn, SignUp, VerifyEmail];
+	let tags = [
+		{ id: 1, text: `Q&A` },
+		{ id: 2, text: `Tutorial` },
+		{ id: 3, text: `PSA` },
+		{ id: 4, text: `Request` },
+		{ id: 5, text: `Creation` }
+	];
+
+	$: clientWidth.set(windowWidth);
+	$: showingPreferencesModal = $showPreferences;
+	$: selectedAution = autions[$authOption];
+	$: modalCreationBool = $showCreationModal;
+	$: isSignUp = $authOption === 1;
+	$: isVertical.set(value);
+
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} on:message={handle_event}/>
@@ -183,6 +221,156 @@
 	--mainThemeShadow: {mainThemeShadow} !important;
 	"
 >
+{#if $navigating}
+	<div class="spinner-container">
+	<div id="loading" />
+	</div>
+{/if}
+
+<!-- Auth Modal Start -->
+{#if $showAuthModal}
+	<Modal isCustomModal={true} isAuth={true} {isSignUp}>
+	<div class="auth-container" slot="custom_modal">
+		<div class="wavesBG">
+		<svg
+			class="waves"
+			xmlns="http://www.w3.org/2000/svg"
+			xmlns:xlink="http://www.w3.org/1999/xlink"
+			viewBox="0 24 150 28"
+			preserveAspectRatio="none"
+			shape-rendering="auto"
+		>
+			<defs>
+			<path
+				id="gentle-wave"
+				d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"
+			/>
+			</defs>
+			<g class="parallax">
+			<use xlink:href="#gentle-wave" x="48" y="0" fill="#{mainThemeBackgroundColor}b3" />
+			<use xlink:href="#gentle-wave" x="48" y="3" fill="#{mainThemeBackgroundColor}80" />
+			<use xlink:href="#gentle-wave" x="48" y="5" fill="#{mainThemeBackgroundColor}4d" />
+			<use xlink:href="#gentle-wave" x="48" y="7" fill="#{mainThemeBackgroundColor}" />
+			</g>
+		</svg>
+		</div>
+		<div class="top-item top-right">
+		<h2 class="logo-text">srcdoc</h2>
+		<br />
+		<br />
+		<br />
+		<div class="auth-form modal-auth" class:isSignUp>
+			<!-- <SignIn bind:email={email} bind:password={password} {login}/> -->
+			<svelte:component
+			this={selectedAution}
+			bind:email
+			bind:password
+			bind:username
+			bind:passwordConf
+			bind:verificationCode
+			{error}
+			{login}
+			{register}
+			{verify}
+			/>
+		</div>
+		</div>
+	</div>
+	</Modal>
+{/if}
+<!-- Auth Modal End -->
+
+<!-- Preferences/General Settings Modal Start -->
+{#if showingPreferencesModal}
+	<Modal isCustomModal={false} isAuth={false}>
+	<div slot="toggle">
+		Darkmode
+		<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
+	</div>
+	</Modal>
+{/if}
+<!-- Preferences/General Settings Modal End -->
+
+<!-- Editor Settings Modal Start -->
+{#if showEditorSettings}
+	<Modal bind:showEditorSettings>
+		<div slot="toggle">
+			<CustomToggle bind:toggle={value} />
+		</div>
+	</Modal>
+{/if}
+<!-- Editor Settings Modal End -->
+
+<!-- Creation Modal Start -->
+{#if modalCreationBool}
+	<Modal isCustomModal={modalCreationBool} bind:modalCreationBool>
+	<div class="creation-modal-container" slot="custom_modal">
+		Create New:
+		<!-- Select Creation Type Start -->
+		<div class="menu-toggle select">
+		<select bind:value={selectedCreation}>
+			{#if options}
+			{#each options as option}
+				<option value={option}>
+				{option}
+				</option>
+			{/each}
+			{/if}
+		</select>
+
+		<!-- {#if selectedCreation === 'Post'}
+			<select bind:value={selectedCollective}>
+			{#if collectiveOptions}
+				{#each collectiveOptions as option}
+				<option value={option.id}>
+					{option.name}
+				</option>
+				{/each}
+			{/if}
+			</select>
+		{/if} -->
+		</div>
+		<!-- Select Creation Type End -->
+
+		<!-- Post Selection Options Start -->
+		{#if selectedCreation === 'Post' || selectedCreation === 'Creation'}
+		<div class="post-details">
+			<label for="page-text">
+			<span>Post Title</span>
+			</label>
+			<input
+			type="text"
+			bind:value={currentPostTitle}
+			name="title"
+			placeholder="Add post title..."
+			/>
+			<br />
+			<label for="page-text">
+			<span>Post Description</span>
+			</label>
+			<textarea
+			class="description-body"
+			name="postText"
+			placeholder="Add post description..."
+			bind:value={currentPostBlurb}
+			/>
+			<br />
+			<label>
+			<select bind:value={selectedTag}>
+				{#each tags as tag}
+				<option value={tag}>{tag.text}</option>
+				{/each}
+			</select>
+			</label>
+		</div>
+		{/if}
+		<!-- Post Selection Options End -->
+
+		<button on:click={handleNewCreation}>Create</button>
+	</div>
+	</Modal>
+{/if}
+<!-- Creation Modal End -->
 	<div id="nav-container">
 		<Nav {isPost} {windowWidth} isExplorePage={false}>
 			<li class="logo-li nav-id-header" slot="userProfile">

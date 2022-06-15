@@ -18,7 +18,11 @@ const createWritableStore = (key, startValue) => {
     };
 };
 
-
+export const editorOutContainerHeight = writable(null);
+export const editorOutContainerWidth = writable(null);
+export const editorContainerHeight = writable(null);
+export const editorContainerWidth = writable(null);
+export const paneMinHeightModifier = writable(30);
 export const clientWidth = writable(0);
 export const rightPanelWidth = createWritableStore("rightPanelWidth", null);
 export const dropWidth = createWritableStore("dropWidth", null);

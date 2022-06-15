@@ -126,6 +126,7 @@
 	import Editor from '$lib/components/ui/Editor/index.svelte';
 	import Output from '$lib/components/ui/Output/index.svelte';
 	import Console from '$lib/components/ui/Console/index.svelte';
+	import Pane from '$lib/components/layout/EditorLayouts/Base/Pane.svelte';
 	import {
 		afterNavigate,
 		beforeNavigate,
@@ -207,23 +208,11 @@ import { messageEvent } from '$lib/stores/eventStore';
 
 	// Initial Declarations
 	let logs;
-	let last_console_event;
+
 	let pageContainerWidth = 0;
-	let pages;
-	let triggerDelete;
-	let editorVisible = false;
-	let isPost;
-	let collectives;
-	// let value: boolean = false; //  Layout Toggle
-	let showEditorSettings: boolean = false;
-	let pageSelector;
-	let authPageRowSizeValue = '';
-	let selected;
-	let filterForm;
-	let leftPaneWidth = 0;
+
 	let splitPaneContainer;
-	let currentPostTitle = '';
-	let currentPostBlurb = '';
+
 	let showLoader = false;
 
 	$: value = $isVertical;
@@ -237,27 +226,25 @@ import { messageEvent } from '$lib/stores/eventStore';
 			<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
 				<section id="split-2">
 					<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
-						<section id="split-html" class="section-panel" style="overflow-x: visible;">
-							{#if html}
-								<Editor code={html} />
-							{/if}
-						</section>
-						<section id="split-css" class="section-panel" style="overflow-x: visible;">
-							<Editor code={css} />
-						</section>
-						<section id="split-js" class="section-panel" style="overflow-x: visible;">
-							<Editor code={js} />
-						</section>
+						<Pane id={'split-html'} label={'html'}>
+							<Editor slot="pane-content" code={html}/>
+						</Pane>
+						<Pane id={'split-css'} label={'css'}>
+							<Editor slot="pane-content" code={css}/>
+						</Pane>
+						<Pane id={'split-js'} label={'js'}>
+							<Editor slot="pane-content" code={js}/>
+						</Pane>
 					</SplitPane>
 				</section>
 				<section id="split-3">
 					<SplitPane panes={['#split-output', '#split-console']} vertical={!value} sizes={[100, 0]}>
-						<section id="split-output" class="section-panel">
-							<Output {srcdoc} />
-						</section>
-						<section id="split-console" class="section-panel">
-							<Console {logs} />
-						</section>
+						<Pane id={'split-output'} label={'output'}>
+							<Output slot="pane-content" {srcdoc} />
+						</Pane>
+						<Pane id={'split-console'} label={'console'}>
+							<Console slot="pane-content" {logs} />
+						</Pane>
 					</SplitPane>
 				</section>
 			</SplitPane>
@@ -266,6 +253,13 @@ import { messageEvent } from '$lib/stores/eventStore';
 </div>
 
 <style lang="scss">
+	:global(.gutter) {
+		min-width: 10px;
+		min-height: 10px;
+	}
+	section#split-1 {
+		min-width: 110px;
+	}
 	@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 	.divi {
 		background-color: #52505817;
@@ -306,6 +300,7 @@ import { messageEvent } from '$lib/stores/eventStore';
 		border-radius: 6px !important;
 	}
 	.section-panel {
+		flex-grow: 1;
 		border-radius: 6px;
 		background-color: var(--mainThemePanelColor);
 	}

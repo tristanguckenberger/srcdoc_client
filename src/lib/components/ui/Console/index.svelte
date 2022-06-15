@@ -86,5 +86,6 @@
 	.clg_container {
 		overflow-y: scroll;
 		color-scheme: var(--colorScheme);
+    	padding-top: 30px;
 	}
 </style>

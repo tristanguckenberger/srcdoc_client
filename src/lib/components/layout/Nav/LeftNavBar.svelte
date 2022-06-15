@@ -401,64 +401,29 @@
 			</li>
 		{:else}
 			{#if authorized}
-				<!-- <li bind:clientWidth={profileDropSize}>
-					<div
-						class:profileToggle
-						class="profile-drop"
-						on:click={() => {
-							profileToggle = !profileToggle;
-						}}
-					>
-						<Hamburger />
-						{#if windowWidth > 900}
-							{#if authorized && authorized.hasOwnProperty('user')}
-								<span class="label">
-									<a href="/profiles/u/{authorized.user.id}">
-										{authorized.user.username}
-									</a>
-								</span>
-							{:else if authorized && authorized.hasOwnProperty('username')}
-								<span class="label">
-									<a href="/profiles/u/{authorized.id}">
-										{authorized.username}
-									</a>
-								</span>
-							{/if}
-						{/if}
+			<li>
+				<a
+					href="."
+					on:click|preventDefault={logout}>Sign Out</a
+				>
+			</li>
+			<div class="theme-toggle">
+				<hr>
+				<a
+					class="nav-toggle"
+					href="."
+					on:click|preventDefault={() => {
+						// Set store toggle value for dark/light theme
+						// isDarkModeStore.set(!$isDarkModeStore);
+					}}
+				>
+					Dark Mode
+					<div class="toggle-container">
+						<!-- {#if $isDarkModeStore} On {:else} Off {/if} -->
+						<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
 					</div>
-
-					{#if profileToggle}
-						<ul
-							class="drop"
-							class:isPost
-							in:slide={{ delay: 0, duration: 100 }}
-							out:slide={{ delay: 100, duration: 150 }}
-						>
-							<li in:fade={{ delay: 100, duration: 150 }} out:fade={{ delay: 0, duration: 150 }}>
-								<a href="/">Explore</a>
-							</li>
-							<li in:fade={{ delay: 100, duration: 150 }} out:fade={{ delay: 0, duration: 150 }}>
-								<a href="." class="g_id_signout" on:click|preventDefault={logout}>Sign Out</a>
-							</li>
-							<hr />
-							<li>
-								<a
-									href="."
-									class="nav-toggle"
-									on:click|preventDefault={() => {
-										// isDarkModeStore.set(!$isDarkModeStore);
-									}}
-								>
-									Dark Mode
-									<div class="toggle-container">
-										{#if $isDarkModeStore} On {:else} Off {/if}
-										<CustomToggle bind:toggle={$isDarkModeStore} notLayoutToggle={true} />
-									</div>
-								</a>
-							</li>
-						</ul>
-					{/if}
-				</li> -->
+				</a>
+			</div>
 			{:else}
 
 						<li >

@@ -154,10 +154,10 @@
 	{#if $page?.url?.pathname}
 		{#if ($isPostStore === true || $isCreationStore === true) && windowWidth > 900}
 			<slot name="editorMenu" />
-			<Search />
+			<!-- <Search /> -->
 		{:else if ($isPostStore === false && $isCreationStore === false) && windowWidth > 900}
 			<div class="browse-controls">
-				<Search />
+				<!-- <Search /> -->
 			</div>
 		{/if}
 	{/if}
@@ -592,9 +592,9 @@
 		display: grid;
 		grid-template-columns: minmax(100px, 20%) minmax(450px, 80%) minmax(250px, 20%);
 		grid-gap: 10px;
-		max-width: 1980px;
-		width: 100%;
-		justify-content: center;
+		// max-width: 1980px;
+		width: calc(100% - 20px);
+		justify-content: space-between;
 		margin: var(--navMargin);
 		width: var(--navWidth);
 
@@ -635,7 +635,7 @@
 	}
 	nav.showLeftPane {
 		grid-template-columns: minmax(100px, 20%) minmax(600px, 80%) minmax(100px, 20%);
-		max-width: 1980px;
+		// max-width: 1980px;
 	}
 	.menu-item {
 		height: 100%;
@@ -669,7 +669,7 @@
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
 			grid-gap: 10px;
-			max-width: 1980px;
+			// max-width: 1980px;
 			width: 100%;
 			justify-content: center;
 			margin: auto;
@@ -700,7 +700,7 @@
 		}
 	}
 	.profile-drop {
-		min-width: 250px;
+		// min-width: 250px;
 		width: 100%;
 		flex-grow: 1;
 		height: 48px;
@@ -775,7 +775,8 @@
 	}
 	nav.isPost,
 	nav.isCreation {
-		grid-template-columns: 2fr 2fr var(--rightPanelWidth);
+		// grid-template-columns: 800px var(--rightPanelWidth);
+		grid-template-columns: 800px 300px;
 	}
 	.drop.isPost {
 		box-shadow: unset;
