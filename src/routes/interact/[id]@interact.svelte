@@ -120,7 +120,7 @@
 </script>
 
 <script lang="ts">
-	import { clientWidth, isVertical } from '$lib/stores/layoutStore';
+	import { clientWidth, isVertical, editorContainerHeight, editorContainerWidth, editorOutContainerWidth, editorOutContainerHeight  } from '$lib/stores/layoutStore';
 	import SplitPane from '$lib/components/layout/SplitPane/index.svelte';
 	import { fade } from 'svelte/transition';
 	import Editor from '$lib/components/ui/Editor/index.svelte';
@@ -224,7 +224,7 @@ import { messageEvent } from '$lib/stores/eventStore';
 	{#if windowWidth && windowWidth > 900}
 		<div class:showLoader bind:this={splitPaneContainer} class="split-container">
 			<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
-				<section id="split-2">
+				<section id="split-2" bind:clientWidth={$editorContainerWidth} bind:clientHeight={$editorContainerHeight}>
 					<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
 						<Pane id={'split-html'} label={'html'}>
 							<Editor slot="pane-content" code={html}/>
@@ -237,7 +237,7 @@ import { messageEvent } from '$lib/stores/eventStore';
 						</Pane>
 					</SplitPane>
 				</section>
-				<section id="split-3">
+				<section id="split-3"  bind:clientWidth={$editorOutContainerWidth} bind:clientHeight={$editorOutContainerHeight}>
 					<SplitPane panes={['#split-output', '#split-console']} vertical={!value} sizes={[100, 0]}>
 						<Pane id={'split-output'} label={'output'}>
 							<Output slot="pane-content" {srcdoc} />
