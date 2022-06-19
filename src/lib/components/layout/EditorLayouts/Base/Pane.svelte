@@ -1,18 +1,30 @@
 <script>
-    import { isVertical, paneMinHeightModifier, editorContainerHeight, editorContainerWidth, editorOutContainerHeight } from '$lib/stores/layoutStore';
+    import { isVertical, editorContainerHeight, editorOutContainerHeight } from '$lib/stores/layoutStore';
+    import { hover } from '$lib/actions/hover';
+    import { fade } from 'svelte/transition';
 
     export let id;
     export let label;
 
     let split;
-    export let splitClientWidth;
-    export let splitClientHeight;
+    let splitClientWidth;
+    let splitClientHeight;
+    let showPaneOptions = false;
 
+    $: showOptionsObserved = showPaneOptions;
     $: value = $isVertical;
-    $: splitWidth = splitClientWidth;
-    $: splitHeight = splitClientHeight;
 
-    $: console.log(`width: ${$editorContainerWidth}, height: ${$editorContainerHeight}`)
+    $: if ((splitClientWidth <= 30) || (splitClientHeight <= 30)) {
+        if (split) {
+            let splitModel = split?.querySelector('.slot-control-bar .container');
+            splitModel.style.borderRadius = '6px';
+        }
+    } else {
+        if (split) {
+            let splitModel = split?.querySelector('.slot-control-bar .container');
+            splitModel.style.borderRadius = '6px 6px 0 0';
+        }
+    }
 
     $: if ((splitClientWidth <= 30)) {
         if (split) {
@@ -32,16 +44,6 @@
             split.style.minHeight = `${30}px`;
         }
     }
-
-    /**
-     * if splitpane is not verical i.e. ($isVertical === true)
-     * check the split height
-     * if is less or equal to 30
-     * set width to 50 
-     * basically do what you did for the 
-     * splitClientWidth reactive statement just above this
-     * 
-     */
 
      $: isOutput = $editorOutContainerHeight <= 30;
      $: isEditor = $editorContainerHeight <= 30;
@@ -64,13 +66,6 @@
                 }
             }
         }
-    //  } else if (!(splitClientHeight <= 30) && ($editorContainerHeight <= 30) && $isVertical) {
-    //     if (split) {
-    //         console.log('not smol')
-    //         let splitModel = split?.querySelector('.slot-control-bar .container');
-    //         splitModel.style.transform = 'rotate(0deg)';
-    //         split.style.minWidth = `${80}px`;
-    //     }
      } else if ($isVertical) {
         split.style.minWidth = `${30}px`;
      }
@@ -96,10 +91,7 @@
 				if (!isVertical && !isEditor) {
                     if (!isOutput) {
                         child.querySelector('.slot-control-bar .container').style.transform = 'rotate(90deg)';
-                    } else {
-                        child.querySelector('.slot-control-bar .container').style.transform = 'rotate(0deg)';
                     }
-					
 				} 
 			}
 		});
@@ -121,7 +113,14 @@
             maximize(e, !value);
         }}
     >
-        <div class="container no-selection">{label}</div>
+        <div class="container no-selection" use:hover on:hovered={() => (showPaneOptions = !(splitClientWidth <= 30) ? true : false)} on:mouseleave={() => (showPaneOptions = false)}>    
+            {label}
+            {#if showOptionsObserved}
+                <div class="pane-options" in:fade|local="{{ delay: 50, duration: 100 }}" out:fade|local="{{ delay: 0, duration: 200 }}">
+                    option
+                </div>
+            {/if}
+        </div>
     </div>
     <slot name="pane-content" />
 </section>
@@ -139,6 +138,11 @@
 			position: absolute;
 			display: flex;
 			align-items: center;
+            transition: background-color 300ms cubic-bezier(0.215, 0.610, 0.355, 1);
+
+            &:hover {
+                background-color: var(--mainThemePanelColor);
+            }
 		}
 		&:hover {
 			cursor: pointer;

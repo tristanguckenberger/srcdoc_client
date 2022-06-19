@@ -1,138 +1,106 @@
 import { writable } from "svelte/store";
+import { sortComments, processPostData, pageArrBuilder } from '$lib/utilities/processing/index.js';
+import { get as getUtil } from '$lib/utils';
 
-function sortComments(unsortedComments) {
-
-	console.log('unsortedComments')
-	console.log(unsortedComments)
-		if (unsortedComments?.length > 0) {
-			unsortedComments?.map((x) => {
-				x.isMember = false;
-				return x;
-			});
-			let updateCL = unsortedComments?.slice();
-			updateCL?.forEach((comment) => {
-				if (!comment?.parentId) comment.parentId = null;
-			});
-			const nested = updateCL?.reduce(
-				(initial, value, index, original) => {
-					if (value?.parentId) {
-						console.log('parent found?')
-						let parentFound = findParent(initial?.nested, value);
-						if (parentFound) {
-							console.log('parent found.')
-							checkLeftOvers(initial?.left, value);
-						} else {
-							initial?.left?.push(value);
-						}
-					} else {
-						console.log('no parent found')
-						if (initial?.left?.length) {
-							checkLeftOvers(initial?.left, value);
-						}
-						delete value?.parentId;
-						value.root = true;
-						initial?.nested?.push(value);
-					}
-					return index < original?.length - 1 ? initial : initial?.nested;
-				},
-				{ nested: [], left: [] }
-			);
-
-			return nested;
-		}
-}
-
-function checkLeftOvers(leftOvers, possibleParent) {
-    let leftOversLen = leftOvers?.length;
-    let parentChildren = possibleParent?.children || [];
-
-    for (let i = 0; i < leftOversLen; i++) {
-    if (leftOvers[i]?.parentId === possibleParent?.id) {
-        delete leftOvers[i]?.parentId;
-        parentChildren
-            ? parentChildren?.push(leftOvers[i])
-            : (parentChildren = [leftOvers[i]]);
-        possibleParent.count = parentChildren.length;
-        const addedObj = leftOvers.splice(i, 1);
-        console.log(addedObj)
-        checkLeftOvers(leftOvers, addedObj[0]);
-    }
-    }
-}
-
-function findParent(possibleParents, possibleChild) {
-    let possibleParent = possibleChild?.parentId;
-    let found = false;
-    for (let i = 0; i < possibleParents?.length; i++) {
-        console.log(possibleParents[i]?.id === possibleParent)
-    if (possibleParents[i]?.id === possibleParent) {
-        found = true;
-        try {
-        delete possibleChild?.parentId;
-        } catch (error) {
-            console.error(error)
-        }
-        
-        if (possibleParents[i]?.children) {
-        possibleParents[i]?.children?.push(possibleChild);
-        } else {
-        possibleParents[i].children = [possibleChild];
-        possibleParents[i].count = possibleParents[i]?.children?.length;
-        return true;
-        } 
-    } else if (possibleParents[i].children)
-        found = findParent(possibleParents[i].children, possibleChild);
-    }
-    return found;
-}
-
-function getComments(id) {
+function getComments(arg) {
+  let id = arg;
+  if (id) {
     const fetchURL = `../../api/comment/getComments/${id}.json`;
     return fetch(fetchURL, {
         method: 'GET'
     });
+  } else {
+    console.log('NO ID')
+  }
+   
 }
 
-// api hydrator func w/ local storage
-const asyncReadable = (initial, loadFunction) => {
+function getPost(arg) {
+  let id = arg;
+  if (id) {
+    const fetchURL = `../../api/post/getSinglePost/${id}.json`;
+    return fetch(fetchURL, {
+        method: 'GET'
+    });
+  } else {
+    console.log('NO ID')
+  }
+}
+
+function getProjects(arg) {
+  let id = arg;
+  if (id) {
+    const fetchURL = `../../api/project/getAllProjectsForPost/${id}.json`;
+    return fetch(fetchURL, {
+        method: 'GET'
+    });
+  } else {
+    console.log('NO ID')
+  }
+}
+
+
+/**
+ * 
+ * @param {*} initial => this is a starting value
+ * @param {*} loadFunction => this is the fetch function (get, post, put, delete)
+ * @param {*} dataResolver => basically just a function from utilities
+ * @returns a svelte store that loads asynchronously
+ */
+const asyncReadable = (initial, loadFunction, dataResolver) => {
     let loadPromise;
-    const loadValue = async (id, set, reload) => {
+
+    const loadValue = async (arg, set, reload) => {
+
+      // IF there isnt a loadFunc set here 
+      // OR if the store that is created with
+      // this func is called with .reload()
+      // THEN set a function for fetching.
+      // arg is an optional param that allows
+      // you to pass in whatever  you want to 
+      // your loadFunc
         if (!loadPromise || reload) {
-            console.log('the id is:')
-            console.log(id)
-            loadPromise = loadFunction(id);
+            loadPromise = loadFunction(arg);
         }
 
-        const storeValue = await (await loadPromise).json();
-        // const newStoreVal = await storeValue.json();
-        let nestedComments;
+        // get the data
+        let loaded = loadPromise?.then(r => (r?.json()))
+        let storeValue = await loaded;
 
-        if (storeValue) nestedComments = sortComments(storeValue)
+        // pass the data to resolver func for processing
+        let resolvedData = dataResolver(storeValue);
 
-
-        set(nestedComments ?? storeValue);
-        return (nestedComments ?? storeValue);
+        // save and return the result
+        set(resolvedData ?? storeValue);
+        return (resolvedData ?? storeValue);
     };
+
     const { subscribe, set } = writable(initial, (set) => {
         loadValue(set);
     });
+
     return {
+        // set,
         subscribe,
-        load: (id) => loadValue(id, set),
-        reload: (id) => loadValue(id, set, true),
-        // useLocalStorage: () => {
-        //     const json = localStorage.getItem(key);
-        //     if (json) {
-        //       set(JSON.parse(json));
-        //     }
-      
-        //     subscribe((current) => {
-        //       localStorage.setItem(key, JSON.stringify(current));
-        //     });
-        //   },
+        load: (arg) => loadValue(arg, set),
+        reload: (arg) => loadValue(arg, set, true),
     };
 };
 
-export const commentSubscriber = writable('');
+export const commentHydrator = asyncReadable(
+    [], 
+    getComments, 
+    sortComments
+);
 
-export const commentHydrator = asyncReadable([], getComments);
+export const postHydrator = asyncReadable(
+    {},
+    getPost, 
+    processPostData
+);
+
+export const projectsHydrator = asyncReadable(
+    [],
+    getProjects, 
+    pageArrBuilder
+);

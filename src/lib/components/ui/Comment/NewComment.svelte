@@ -39,7 +39,7 @@
 				dispatchCommentEvent();
 			}
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 
@@ -82,7 +82,7 @@
 			text = '';
 			dispatchCommentEvent();
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 

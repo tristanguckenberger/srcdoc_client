@@ -96,7 +96,6 @@
 	afterUpdate(() => {
 		showLoader = $navigating !== null;
 		authorized = $session;
-		// console.log($session);
 	});
 
 	$: if (showLoader) {

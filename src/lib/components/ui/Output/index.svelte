@@ -2,14 +2,35 @@
 	import buildDoc from '$lib/srcdoc';
 	import { thumbnailStore } from '$lib/stores/postStore';
 	import { showCaptureThumbnail } from '$lib/stores/codeStore.js';
+	import { htmlStore, cssStore, jsStore } from '$lib/stores/codeStore.js';
 	// import { dataURLtoFile, saveFile } from '$lib/utils';
 	// ../../node_modules/html2canvas
 	import html2canvas from '../../../../../node_modules/html2canvas';
-
+import { onDestroy } from 'svelte';
+	
 	export let srcdoc: any;
+	let html;
+	let css;
+	let js;
+
+	const htmlSub = htmlStore.subscribe((x) => {
+        html = x;
+    });
+    const cssSub = cssStore.subscribe((x) => {
+        css = x;
+    });
+    const jsSub = jsStore.subscribe((x) => {
+        js = x;
+    });
+
+	$: srcdoc = { 
+		html,
+		css,
+		js,
+	};
 
 	let iframe: HTMLIFrameElement;
-	$: srcdocBuild = buildDoc(srcdoc.html.source, srcdoc.css.source, srcdoc.js.source);
+	$: srcdocBuild = buildDoc(srcdoc?.html?.source, srcdoc?.css?.source, srcdoc?.js?.source);
 
 	$: if (iframe) {
 		// We can just update srcdoc for now
@@ -25,6 +46,12 @@
 
 	// let doc = document.getElementById("#output-iframe");
 	$: showCap = $showCaptureThumbnail;
+
+	onDestroy(() => {
+		htmlSub();
+		cssSub();
+		jsSub();
+	})
 </script>
 
 <div style="height: 100%;">
@@ -32,13 +59,8 @@
 		<span
 			class="capture"
 			on:click={() => {
-				let doc = iframe.contentDocument
-					? iframe.contentDocument
-					: iframe.contentWindow
-					? iframe.contentWindow.document
-					: null;
-				console.log(doc.body);
-				html2canvas(doc.body).then((canvas) => {
+				let doc = iframe?.contentDocument ?? iframe?.contentWindow?.document;
+				html2canvas(doc?.body).then((canvas) => {
 					const dataURL = canvas.toDataURL('image/png', 1.0); // send this to server
 
 					//THIS STUFF GOES IN API
@@ -46,8 +68,6 @@
 					if (dataURL) thumbnailStore.set(dataURL.replace(/^data:image\/(png|jpg);base64,/, ''));
 
 					// saveFile(file);
-
-					// console.log(file);
 					// upload to the gist
 				});
 			}}>Capture Thumbnail</span

@@ -54,7 +54,7 @@
 			// fetchUpdatedData(pid);
 			// goto("/");
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 
@@ -76,7 +76,7 @@
 				dispatchCommentEvent();
 			}
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 

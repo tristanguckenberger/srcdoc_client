@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/env';
 	import type monaco from 'src/../monaco-editor';
-	import { afterUpdate, createEventDispatcher, onDestroy, onMount } from 'svelte';
+	import { afterUpdate, createEventDispatcher, onMount } from 'svelte';
 	import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 	import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
 	import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
@@ -24,8 +24,6 @@
 			value: editor.getValue()
 		});
 	}
-
-	async function buildEditor() {}
 
 	onMount(async () => {
 		// @ts-ignore
@@ -70,14 +68,23 @@
 		};
 	});
 	afterUpdate(async () => {
-		if ($changingPage) {
+		if ($changingPage === true && editor) {
 			editor.setValue(value);
+			changingPage.set(false);
 
-			setTimeout(() => {
-				changingPage.set(false);
-			}, 100);
+			// setTimeout(() => {
+			// 	changingPage.set(false);
+			// }, 100);
 		}
 	});
+
+	// $: if ($changingPage === true) {
+	// 		editor.setValue(value);
+
+	// 		setTimeout(() => {
+	// 			changingPage.set(false);
+	// 		}, 100);
+	// 	}
 
 	$: if ($isDarkModeStore) {
 		if (Monaco) {

@@ -34,7 +34,7 @@
 	export let posts;
 
 	onMount(() => {
-		initialPostData.set(null);
+		initialPostData.set({});
 		lockPageStore.set(false);
 		changingPage.set(false);
 		if ($redirected) {

@@ -1,15 +1,17 @@
 <script lang="ts">
-    import { browser } from "$app/env";
     import type { editor } from "monaco-editor/esm/vs/editor/editor.api.js";
 	import { htmlStore, cssStore, jsStore } from '$lib/stores/codeStore.js';
 	import MonacoEditorScripts from "./MonacoEditorScripts.svelte";
-	import { isDarkModeStore } from "$lib/stores/layoutStore";
 
 	export let code;
 
-	let options: editor.IStandaloneEditorConstructionOptions = {
+	$: codeType = code?.type;
+
+	let options: editor.IStandaloneEditorConstructionOptions;
+
+	$: options = {
 		theme: "omni-light",
-		language: code.type,
+		language: code?.type,
 		fontSize: 16,
 		padding: {top: 30},
 		showFoldingControls: "always",
@@ -33,33 +35,26 @@
 		// lineNumbersMinChars: 2,
 	};
 
-	// $: options.theme = $isDarkModeStore ? "omni-dark" : "omni-light";
-
-	// $: optionListener = {...options};
-	
 </script>
 
 <div style="height:100%;">
-	<div style="height:100%;">
-			
-		<MonacoEditorScripts
-			IFTitle={code.type}
-			bind:value={code.source}
-			{options}
-			on:update={(e) => {
-				if (code.type === 'html') {
-					htmlStore.set({source: e.detail.value, type: 'html'});
-				}
-				if (code.type === 'css') {
-					cssStore.set({source: e.detail.value, type: 'css'});
-				}
-				if (code.type === 'typescript') {
-					jsStore.set({source: e.detail.value, type: 'typescript'});
-				}
-			}}
-		/>
-					
-			
-			
-	</div>
+		{#if code && code?.type}
+			<MonacoEditorScripts
+				IFTitle={codeType}
+				bind:value={code.source}
+				{options}
+				on:update={(e) => {
+					if (code?.type === 'html') {
+						console.log('setting code')
+						htmlStore.set({source: e?.detail?.value, type: 'html'});
+					}
+					if (code?.type === 'css') {
+						cssStore.set({source: e?.detail?.value, type: 'css'});
+					}
+					if (code?.type === 'typescript') {
+						jsStore.set({source: e?.detail?.value, type: 'typescript'});
+					}
+				}}
+			/>
+		{/if}	
 </div>

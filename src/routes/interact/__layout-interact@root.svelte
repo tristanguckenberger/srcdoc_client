@@ -164,12 +164,9 @@
 		? await postUtil(`/api/auth/signIn.json`, { gCred }).then((r) => r.json(), gCred)
 		: await postUtil(`/api/auth/signIn.json`, { email, password }).then((r) => r.json());
 
-		console.log(response);
-
 		if (response && response.active === false) {
 		authOption.set(2);
 		} else {
-		console.log(response);
 		$session = response;
 		showAuthModal.set(false);
 		}

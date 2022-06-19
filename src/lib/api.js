@@ -8,7 +8,7 @@ async function send({ method, path, data, token }) {
 		try {
 			opts.body = JSON.stringify(data);
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 		
 	}

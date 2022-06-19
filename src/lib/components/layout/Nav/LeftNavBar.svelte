@@ -96,7 +96,6 @@
 	afterUpdate(() => {
 		showLoader = $navigating !== null;
 		authorized = $session;
-		// console.log($session);
 	});
 
 	$: if (showLoader) {
@@ -430,7 +429,6 @@
 							<a
 								href="."
 								on:click|preventDefault={() => {
-									console.log('sign in')
 									authOption.set(0);
 									showAuthModal.set(true);
 							}}>

@@ -26,16 +26,6 @@ export default class Post {
         return this.pages;
     }
     addPage(title: string = '', text: string = '') {
-        console.log('----------------')
-        console.log('----------------')
-        console.log('----------------')
-        console.log('----------------')
-        console.log("Logging the post");
-        console.log(this);
-        console.log('----------------')
-        console.log('----------------')
-        console.log('----------------')
-        console.log('----------------')
         let pageCount = this.pages.length;
         let page = new Page((pageCount + 1), (title ?? ''), (text ?? ''));
         this.pages = [...this.pages, page];

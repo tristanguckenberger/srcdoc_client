@@ -55,7 +55,7 @@
         clientId="761947555347-tuf0jpans20bbaok49jhlu419r7ocdka.apps.googleusercontent.com"
         on:auth-success={(e) => {
           const gCred = JSON.parse(JSON.stringify(e.detail.user));
-          console.log(gCred);
+          // console.log(gCred);
 
           // now that we got a success, we can send the token to our server
           // login(gCred?.wc?.id_token);

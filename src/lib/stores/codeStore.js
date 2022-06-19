@@ -8,7 +8,7 @@ import { writable } from "svelte/store";
 
 // export const codeToSave = writable({});
 
-export const changingPage = writable(false);
+
 export const lockPageStore = writable(false);
 
 const createWritableStore = (key, startValue) => {
@@ -30,10 +30,12 @@ const createWritableStore = (key, startValue) => {
   };
 }
 
-
+export const changingPage = createWritableStore('changingPage', false);
 export const htmlStore = createWritableStore('htmlStore',{});
+export const selectedValue = createWritableStore('selected', null);
 export const cssStore = createWritableStore('cssStore',{});
 export const jsStore = createWritableStore('jsStore',{});
+export const pageStore = createWritableStore('pages', null);
 export const showCaptureThumbnail = writable(false);
 
 

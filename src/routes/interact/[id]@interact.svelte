@@ -127,6 +127,7 @@
 	import Output from '$lib/components/ui/Output/index.svelte';
 	import Console from '$lib/components/ui/Console/index.svelte';
 	import Pane from '$lib/components/layout/EditorLayouts/Base/Pane.svelte';
+	import { default as EditorInput } from '$lib/components/layout/EditorLayouts/Base/Input.svelte';
 	import {
 		afterNavigate,
 		beforeNavigate,
@@ -198,7 +199,13 @@ import { messageEvent } from '$lib/stores/eventStore';
 	// 	console.log('after to: ');
 	// 	console.log(nav.to);
 	// });
-	onDestroy(() => {});
+	onDestroy(() => {
+		post = null;
+		currentPage = null;
+		html = null;
+		css = null;
+		js = null;
+	});
 
 	$: windowWidth = $clientWidth;
 	$: html = $htmlStore;
@@ -224,19 +231,10 @@ import { messageEvent } from '$lib/stores/eventStore';
 	{#if windowWidth && windowWidth > 900}
 		<div class:showLoader bind:this={splitPaneContainer} class="split-container">
 			<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
-				<section id="split-2" bind:clientWidth={$editorContainerWidth} bind:clientHeight={$editorContainerHeight}>
-					<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
-						<Pane id={'split-html'} label={'html'}>
-							<Editor slot="pane-content" code={html}/>
-						</Pane>
-						<Pane id={'split-css'} label={'css'}>
-							<Editor slot="pane-content" code={css}/>
-						</Pane>
-						<Pane id={'split-js'} label={'js'}>
-							<Editor slot="pane-content" code={js}/>
-						</Pane>
-					</SplitPane>
-				</section>
+				<!-- Editor Content -->
+				<EditorInput />
+
+				<!-- Output Content -->
 				<section id="split-3"  bind:clientWidth={$editorOutContainerWidth} bind:clientHeight={$editorOutContainerHeight}>
 					<SplitPane panes={['#split-output', '#split-console']} vertical={!value} sizes={[100, 0]}>
 						<Pane id={'split-output'} label={'output'}>

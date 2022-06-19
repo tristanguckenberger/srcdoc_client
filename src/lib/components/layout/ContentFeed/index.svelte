@@ -14,13 +14,6 @@
 		hidePanel = false;
 	}
 
-	// afterUpdate(() => {
-	// 	if (rigthWidth > 0) {
-	// 		console.log('setting rightPanelWidth at line 20 in afterUpdate in ContentFeed.svelte');
-	// 		rightPanelWidth.set(rigthWidth);
-	// 	}
-	// });
-
 	$: hideRightPanel = $page.url.pathname === '/';
 </script>
 

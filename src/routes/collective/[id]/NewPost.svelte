@@ -99,7 +99,7 @@ import { showCreationModal } from "$lib/stores/modalStore";
             createProjects(res.data.id);
 
         } catch (error) {
-            console.log(error);
+            // console.log(error);
         }
         
     };
@@ -124,7 +124,7 @@ import { showCreationModal } from "$lib/stores/modalStore";
             changingPage.set(true);
             goto("/");
         } catch (error) {
-            console.log(error);
+            // console.log(error);
         }
     };
     const newPage = () => {

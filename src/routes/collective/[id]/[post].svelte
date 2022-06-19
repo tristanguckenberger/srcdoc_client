@@ -337,20 +337,17 @@
 			let res = await response.json();
 			updateProjects(res.data.id);
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 	const updateProjects = async (pid) => {
-		if (!pid) {
-			console.log('No post id passed to updateProjects() in [post].svelte.');
-		}
 		const url = '../../api/project/updateProjectBatch.json';
 
 		let pageData = $currentPost.pages.map((page) => {
 			let updatedPage = { ...page };
 			updatedPage.text = page.description;
 			delete updatedPage.description;
-			// console.log(updatedPage);
+
 			return updatedPage;
 		});
 
@@ -487,8 +484,6 @@
 	$: daysPassed = new Date().getTime() - dateCreated.getTime();
 	$: totalDays = Math.floor(daysPassed / (1000 * 3600 * 24));
 	$: shrink = contentWidth < 350;
-	$: console.log(contentWidth);
-
 	$: newWidth = contentWidth;
 </script>
 

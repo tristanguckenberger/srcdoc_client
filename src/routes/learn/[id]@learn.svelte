@@ -10,112 +10,54 @@
 	} from '$lib/stores/postStore';
 
 	import Post from '$lib/classObjects/post';
-	import { initialPostData } from '$lib/stores/codeStore';
+	import { initialPostData, pageStore } from '$lib/stores/codeStore';
 
 	export async function load({ params, fetch }) {
 		isCreationStore.set(true);
 		const postSlug = params?.id;
-		commentHydrator.reload(postSlug);
-		const postURL = `/api/post/getSinglePost/${postSlug}.json`;
-		const projectURL = `/api/project/getAllProjectsForPost/${postSlug}.json`;
-		const res = await fetch(postURL, {
-			method: 'GET'
-		});
 
-		const posts = await res.json();
-
-		if (posts) {
-			const res = await fetch(projectURL, {
-				method: 'GET'
-			});
-
-			let projects = await res.json();
-			// projects.data = projects.data.filter(x => !x.hasOwnProperty('comment'));
-
-			let postOBJ = {
-				id: posts?.data?.id,
-				authorID: posts?.data?.user,
-				postTitle: posts?.data?.title,
-				postBlurb: posts?.data?.text,
-				pages: []
-			};
-
-			// let data = proj
-			// for (let iterator = 0; iterator < projects.data)
-
-			// Build postOBJ pages in desired form
-			postOBJ.pages = projects?.data.map((x, i) => {
-				let components;
-				const rBody = x?.replBody;
-				if (
-					typeof rBody != 'undefined' &&
-					rBody.hasOwnProperty('files') &&
-					typeof rBody?.files != 'undefined'
-				) {
-					components = Object.keys(rBody?.files).map((key) => {
-						const n = rBody.files[key].name;
-						const joinerIndex = n.indexOf('.');
-						const type = n.includes('.') ? n.slice(joinerIndex + 1, n.length) : n;
-						const name = n.includes('.') ? n.slice(0, joinerIndex) : 'index';
-						const s = rBody.files[key].source;
-						const source = s?.replace(/&lt;/gi, '<') ?? '';
-						return {
-							type,
-							name,
-							source
-						};
-					});
-				}
-
-				let html;
-				let css;
-				let js;
-				let id = x.id;
-				let pid = x.post;
-
-				components.forEach((x) => {
-					if (x.type === 'html') {
-						html = {
-							source: x.source,
-							type: 'html'
-						};
-					}
-					if (x.type === 'css') {
-						css = {
-							source: x.source,
-							type: 'css'
-						};
-					}
-					if (x.type === 'typescript') {
-						js = {
-							source: x.source,
-							type: 'typescript'
-						};
-					}
-				});
-
-				return {
-					id,
-					pid,
-					pageTitle: x.title,
-					description: projects.count > 1 ? x.description : posts.data.text,
-					html,
-					css,
-					js
-				};
-			});
-			initialPostData.set(postOBJ);
-			currentPost.set(postOBJ);
-			currentPostPage.set(postOBJ.pages[0]);
-
+		if (postSlug) {
+			// console.log('postSlug')
+			// console.log(postSlug)
+			commentHydrator.reload(postSlug);
+			const post = postHydrator.reload(postSlug);
+			const pages = projectsHydrator.reload(postSlug);
 			return {
+				post,
+				pages,
 				postSlug
 			};
 		}
+		
+
+		// if (comments) console.log(comments);
+		// if (post) console.log(post);
+		// if (pages) console.log(pages)
+		return {
+			postSlug
+		};
 	}
 </script>
 
 <script lang="ts">
+	// Svelte Stuff
+	import { tick } from 'svelte';
+	import { put as putUtil } from '$lib/utils.js';
+	import { session } from '$app/stores';
+	import marked from 'marked';
+	import { slide } from 'svelte/transition';
+
+	// Components
+	import Button from '$lib/components/ui/Button/TextButton.svelte';
+	import CustomToggle from '$lib/components/ui/CustomToggle/index.svelte';
+	import NewComment from '$lib/components/ui/Comment/NewComment.svelte';
+	import Reply from '$lib/components/ui/Reply/index.svelte';
+	import Vote from '$lib/components/ui/Vote/index.svelte';
+
+	// Stores
+	import { showCaptureThumbnail } from '$lib/stores/codeStore.js';
+	import { messageEvent } from '$lib/stores/eventStore';
+	import { commentHydrator, postHydrator, projectsHydrator } from '$lib/stores/hydrator';
 	import { clientWidth, isVertical, editorContainerHeight, editorContainerWidth, editorOutContainerWidth, editorOutContainerHeight } from '$lib/stores/layoutStore';
 	import SplitPane from '$lib/components/layout/SplitPane/index.svelte';
 	import { fade, fly } from 'svelte/transition';
@@ -123,6 +65,7 @@
 	import Output from '$lib/components/ui/Output/index.svelte';
 	import Console from '$lib/components/ui/Console/index.svelte';
 	import Pane from '$lib/components/layout/EditorLayouts/Base/Pane.svelte';
+	import { default as EditorInput } from '$lib/components/layout/EditorLayouts/Base/Input.svelte';
 	import { beforeNavigate } from '$app/navigation';
 	import {
 		selectedStore,
@@ -145,102 +88,103 @@
 	import { goto } from '$app/navigation';
 	import { creationStorePostCreationFunc, runSave } from '$lib/stores/creationFuncStore';
 	import { afterUpdate, onDestroy, onMount } from 'svelte';
-	// import { slotControlRotator } from '$lib/actions/slotControlRotator';
 
-	let hydratedComments;
-	const hydratedCommentsUnsubber = commentHydrator.subscribe(x => hydratedComments = JSON.parse(JSON.stringify(x)));
-	let selectedTag = $postDetailStarter.tag;
+	let hydratedPost;
+	let hydratedProjects;
+	$: hydratedComments = $commentHydrator;
+	$: if ($projectsHydrator) hydratedProjects = $projectsHydrator;
+	$: if ($postHydrator) hydratedPost = $postHydrator;
+	let selectedTag = $postDetailStarter?.tag;
 	let contentWidth;
 
-
-	$: console.log(hydratedComments)
-
 	let currentPage;
+	$: if ($currentPost) post = $currentPost;
+
 	$: currentPage = $currentPostPage;
 
-	$: post = $currentPost;
+	$: if ($currentPostPage && $currentPost?.id?.toString() === $currentPostPage?.pid?.toString()) {
 
-	$: postContainerWidth = contentWidth;
+		htmlStore.set($currentPostPage?.html);
+		cssStore.set($currentPostPage?.css);
+		jsStore.set($currentPostPage?.js);
+		} else {
+		// if (hydratedProjects) currentPostPage.set(hydratedProjects[0])
+	}
+	
+	$: {
+		if (hydratedPost) {
+			currentPost.set(hydratedPost);
+			initialPostData.set(hydratedPost);
+		}
+	}
 
-	$: $currentPostPage,
-		($currentPost.currentPageID =
-			$currentPostPage && $currentPostPage !== {}
-				? $currentPostPage.id
-				: $currentPost.currentPageID);
 
-	onMount(() => {
-		if (!post) {
-			post = new Post('TITLE', 'BLURB');
-			post.addPage('test');
-			currentPost.set(post);
-			currentPostPage.set($currentPost.pages[0]);
+	afterUpdate(() => {
+		if (!$currentPost && hydratedPost) {
+			currentPost.set(hydratedPost);
+			initialPostData.set(hydratedPost);
+		}
+		if (projectSub && projectSub?.length > 0) {
+			pageStore.set(projectSub);
+		}
+	});
+
+	let projectSub;
+	const projectSubscription = projectsHydrator.subscribe((x) => {
+		console.log('updating');
+		console.log(projectSub)
+		projectSub = x;
+		console.log(projectSub)
+	});
+		
+	let initialized = false;
+
+	onMount(async () => {
+		initialized = true;
+		if (hydratedPost) currentPost.set(hydratedPost);
+		
+		if ($postHydrator) {
+			initialPostData.set($postHydrator);
+			currentPost.set($postHydrator);
 		}
 
-		if ($currentPostPage) {
-			// $currentPostPage.setCode("typescript", "");
-			// $currentPostPage.setCode("css", "");
-			// $currentPostPage.setCode("html", "");
-			htmlStore.set($currentPostPage.html);
-			cssStore.set($currentPostPage.css);
-			jsStore.set($currentPostPage.js);
-		}	
+		if (projectSub && projectSub?.length > 0) {
+			pageStore.set(projectSub);
+		}
 	});
 
 	beforeNavigate((nav) => {});
 
 	onDestroy(() => {
-		hydratedCommentsUnsubber();
+		initialized = false;
+		toggleFix = false;
+		currentPost.set({});
+		currentPostPage.set({});
+		pageStore.set([]);
+		hydratedProjects = null;
+		post = null;
+		currentPage = null;
 	});
 
 	$: windowWidth = $clientWidth;
-	$: html = $htmlStore;
-	$: css = $cssStore;
-	$: js = $jsStore;
-	$: srcdoc = { html, css, js };
 	$: value = $isVertical;
+
 
 	// Initial Declarations
 	let logs: Log[] = [];
-	let last_console_event;
 	let pageContainerWidth = 0;
 	let pages;
-	let triggerDelete;
 	let editorVisible = false;
 	let isPost;
-	let collectives;
-	// let value: boolean = false; //  Layout Toggle
-	let showEditorSettings: boolean = false;
-	let pageSelector;
-	let authPageRowSizeValue = '';
-	let selected;
-	let filterForm;
-	let leftPaneWidth = 0;
 	let splitPaneContainer;
 	let currentPostTitle = '';
 	let currentPostBlurb = '';
 	let showLoader = false;
 
-	// Svelte Stuff
-	import { tick } from 'svelte';
-	import { put as putUtil } from '$lib/utils.js';
-	import { session } from '$app/stores';
-	import marked from 'marked';
-	import { slide } from 'svelte/transition';
 
-	// Components
-	import Button from '$lib/components/ui/Button/TextButton.svelte';
-	import CustomToggle from '$lib/components/ui/CustomToggle/index.svelte';
-	import NewComment from '$lib/components/ui/Comment/NewComment.svelte';
-	import Reply from '$lib/components/ui/Reply/index.svelte';
-	import Vote from '$lib/components/ui/Vote/index.svelte';
-
-	// Stores
-	import { showCaptureThumbnail } from '$lib/stores/codeStore.js';
-	import { messageEvent } from '$lib/stores/eventStore';
-	import { commentHydrator } from '$lib/stores/hydrator';
 
 	// Props
-	export let posts;
+	export let post;
 	export let projects;
 	export let postOBJ;
 	export let authorID;
@@ -288,13 +232,15 @@
 		currentPostTitle = [...characters].join('');
 	}
 	$: toggleUpdateCodeWithPost.set(attachCode);
-	$: page = $currentPostPage;
+	$: page = (async () => {
+		await tick(); 
+		return $currentPostPage;
+	})().then(r => r);
 	$: logs = $messageEvent;
-	let nested;
-	// $: comments = nested
 
 	// Life Cycle Methods
 	let fetchCount = 0;
+
 	// Post Control Functions
 	const newPage = () => {
 		tick();
@@ -336,13 +282,10 @@
 			let res = await response.json();
 			updateProjects(res.data.id);
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 	const updateProjects = async (pid) => {
-		if (!pid) {
-			console.log('No post id passed to updateProjects() in [post].svelte.');
-		}
 		const url = '../../api/project/updateProjectBatch.json';
 
 		let pageData = $currentPost.pages.map((page) => {
@@ -362,183 +305,70 @@
 
 		editing = false;
 	};
-	const fetchUpdatedData = async (pid) => {
-		const postURL = `/api/post/getSinglePost/${pid}.json`;
-		const projectURL = `/api/project/getAllProjectsForPost/${pid}.json`;
-		const res = await fetch(postURL, {
-			method: 'GET'
-		});
-		const posts = await res.json();
-		if (posts) {
-			const res = await fetch(projectURL, {
-				method: 'GET'
-			});
 
-			const projects = await res.json();
-
-			let projectPages = projects.data;
-
-			let postOBJ = {
-				id: posts.data.id,
-				authorID: posts.data.user,
-				postTitle: posts.data.title,
-				postBlurb: posts.data.text,
-				pages: pageArrBuilder(projectPages)
-			};
-
-			currentPost.set(postOBJ);
-			currentPostPage.set(postOBJ.pages[0]);
-		}
-	};
-	const pageArrBuilder = (data) => {
-		let mappedData = data.map((x, i) => {
-			let components;
-			const rBody = x.replBody;
-			if (
-				typeof rBody != 'undefined' &&
-				rBody.hasOwnProperty('files') &&
-				typeof rBody.files != 'undefined'
-			) {
-				components = replBuilder(rBody);
-			}
-			let id = x.id;
-			let pid = x.post;
-
-			let files = replCodeMapper(components);
-			let { html, css, js } = files;
-
-			return {
-				id,
-				pid,
-				pageTitle: x.title,
-				text: x.text ? x.text : x.description,
-				html,
-				css,
-				js
-			};
-		});
-		return mappedData;
-	};
-
-	// Helper Funcs
-	const replBuilder = (replBody) => {
-		let components = Object.keys(replBody.files).map((key) => {
-			const n = replBody.files[key].name;
-			const joinerIndex = n.indexOf('.');
-			const type = n.includes('.') ? n.slice(joinerIndex + 1, n.length) : n;
-			const name = n.includes('.') ? n.slice(0, joinerIndex) : 'index';
-			const s = replBody.files[key].source;
-			const source = s.replace(/&lt;/gi, '<') || '';
-			return {
-				type,
-				name,
-				source
-			};
-		});
-		return components;
-	};
-	const replCodeMapper = (components) => {
-		let html;
-		let css;
-		let js;
-
-		components.forEach((x) => {
-			if (x.type === 'html') {
-				html = {
-					source: x.source,
-					type: 'html'
-				};
-			}
-			if (x.type === 'css') {
-				css = {
-					source: x.source,
-					type: 'css'
-				};
-			}
-			if (x.type === 'typescript') {
-				js = {
-					source: x.source,
-					type: 'typescript'
-				};
-			}
-		});
-
-		return { html, css, js };
-	};
 	let showCreateComment = false;
 	$: showCaptureThumbnail.set(editing);
 	$: dateCreated = new Date(createdAt);
 	const now = new Date();
-	// let daysTimePass = now.getTime() - dateCreated.getTime();
 	$: daysPassed = new Date().getTime() - dateCreated.getTime();
 	$: totalDays = Math.floor(daysPassed / (1000 * 3600 * 24));
 	let splitOne = null;
 	let splitTwo = null;
-	let splitThree = null;
 	let splitFour = null;
-	let splitFive = null;
-	let splitSix = null;
-	let splitSeven = null;
 	let splitOneWidth = null;
-	let splitOutput = null;
-	let splitConsole = null;
+
 	$: cacldSplitOneWidth = splitOneWidth;
 
-	const maximize = async (currentChild, isVertical = false) => {
-		/*
-		 * Steps for Maximizing a pane a user clicks
-		 * Record full width or height
-		 * 1. Determine nearest parent #Split-<num here>
-		 * 2. Get all children including self
-		 * 3. Check if vertical
-		 * 4. If vertical use height
-		 */
-		const { target } = currentChild;
-		const parentSplit = target.closest('.split');
-		const parentSection = target.closest('section');
-		// console.log();
-		const children = parentSplit?.children;
-
-		const childCountTotal = parentSplit?.childElementCount;
-		const gutterCount =
-			[...children].filter((child) => child?.classList?.contains('gutter'))?.length ?? 0;
-		const adjustedChildCount = childCountTotal - gutterCount;
-
-		[...children]?.forEach((child) => {
-			console.log('parentSplit')
-			console.log(parentSplit.clientWidth)
-			if (parentSection == child) {
-				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(100% - ${((isVertical ?  30 : 30)*(adjustedChildCount - 1)) + (((adjustedChildCount - 1))*10)}px)`;
-				if (!isVertical) {
-					child.querySelector('.slot-control-bar .container').style.transform = 'rotate(0deg)';
-				}
-			} else if (parentSection != child && !child?.classList?.contains('gutter')) {
-				child.style[`${isVertical ? 'height' : 'width'}`] = `calc(${(isVertical ? 30 : 30)}px)`;
-				if (!isVertical) {
-					child.querySelector('.slot-control-bar .container').style.transform = 'rotate(90deg)';
-				}
-			}
-		});
-
-		const parentParentSplit = parentSplit.closest('.split');
-	};
 	let paneOneSize = 30; // This is the page pane
 	let paneTwoSize = 70; // This is the editor and output pane cluster
-	let paneThreeSize; // This is the editor pane cluster
-
 	let postContent;
 
-</script>
 
+
+
+
+
+
+
+	let toggleFix = false;
+
+$: {
+	const objCheck = ($currentPostPage && Object.keys($currentPostPage).length === 0 && Object.getPrototypeOf($currentPostPage) === Object.prototype);
+	const objCheckForItems = ($currentPostPage && Object.keys($currentPostPage).length !== 0 && Object.getPrototypeOf($currentPostPage) === Object.prototype);
+	if (objCheck && !!$pageStore && initialized && ($currentPost?.id == $pageStore[0]?.pid)) {
+		currentPostPage.set(JSON.parse(JSON.stringify($pageStore[0])));
+	}
+	if (objCheckForItems && initialized && ($currentPost?.id == $pageStore[0]?.pid) && toggleFix === false) {
+		if ($pageStore[0]?.pid == $currentPostPage?.pid) {
+
+			console.log('SETTING THE CODE STORES')
+			console.log($currentPostPage);
+			htmlStore.set($currentPostPage?.html);
+			cssStore.set($currentPostPage?.css);
+			jsStore.set($currentPostPage?.js);
+			changingPage.set(true);
+			setTimeout(() => {
+				toggleFix = true;
+			}, 1000); 
+		
+		} else {
+			if (($currentPost?.id == $pageStore[0]?.pid)) {
+				currentPostPage.set(JSON.parse(JSON.stringify($pageStore[0])));
+				changingPage.set(true);
+			}
+		}
+
+	}
+}
+
+</script>
+<h1>Howdy</h1>
 <div id="page-container" class:showLoader bind:clientWidth={pageContainerWidth}>
 	{#if windowWidth && windowWidth > 900}
 		<div class:showLoader bind:this={splitPaneContainer} class="split-container">
 			<SplitPane panes={['#split-0', '#split-1']} sizes={[paneOneSize, paneTwoSize]}>
-				<!-- Page Content -->
 				<section id="split-0" bind:this={splitOne} bind:clientWidth={splitOneWidth}>
-					<!-- <div class="slot-control-bar">
-						<div class="container">page</div>
-					</div> -->
+			
 					<div class="post-contentContainer" style="--contentWidth: calc({contentWidth}px - 2rem);">
 						<div class="post-content" bind:clientWidth={contentWidth} bind:this={postContent}>
 							{#if editing}
@@ -741,25 +571,11 @@
 					</div>
 				</section>
 
-				<!-- Editor & Output Content -->
+				
 				<section id="split-1" style="z-index: 1000000000;" bind:this={splitTwo}>
 					<SplitPane panes={['#split-2', '#split-3']} vertical={value}>
-						<!-- Editor Content -->
-						<section id="split-2" bind:this={splitThree} bind:clientWidth={$editorContainerWidth} bind:clientHeight={$editorContainerHeight}>
-							<SplitPane panes={['#split-html', '#split-css', '#split-js']} vertical={!value}>
-								<Pane id={'split-html'} label={'html'}>
-									<Editor slot="pane-content" code={html}/>
-								</Pane>
-								<Pane id={'split-css'} label={'css'}>
-									<Editor slot="pane-content" code={css}/>
-								</Pane>
-								<Pane id={'split-js'} label={'js'}>
-									<Editor slot="pane-content" code={js}/>
-								</Pane>
-							</SplitPane>
-						</section>
+						<EditorInput />
 
-						<!-- Output Content -->
 						<section id="split-3" bind:this={splitFour} bind:clientWidth={$editorOutContainerWidth} bind:clientHeight={$editorOutContainerHeight}>
 							<SplitPane
 								panes={['#split-output', '#split-console']}
@@ -767,7 +583,7 @@
 								sizes={[100, 0]}
 							>
 								<Pane id={'split-output'} label={'output'}>
-									<Output slot="pane-content" {srcdoc} />
+									<Output slot="pane-content" />
 								</Pane>
 								<Pane id={'split-console'} label={'console'}>
 									<Console slot="pane-content" {logs} />

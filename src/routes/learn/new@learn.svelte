@@ -205,7 +205,7 @@
 			let res = await response.json();
 			createProjects(res.data.id);
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 	const saveCodeEditor = () => {
@@ -272,7 +272,7 @@
 			changingPage.set(true);
 			goto('/');
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 	const savePage = () => {

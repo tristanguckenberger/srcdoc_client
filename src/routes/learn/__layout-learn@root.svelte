@@ -18,10 +18,12 @@
 		localCodeStoreCSS,
 		localCodeStoreHTML,
 		localCodeStoreJS,
+		pageStore,
+		selectedValue,
 		triggerReset
 	} from '$lib/stores/codeStore';
 	import { destroyLogs, eventStoreLogHandler, messageEvent } from '$lib/stores/eventStore';
-	import { afterUpdate, onDestroy, onMount } from 'svelte';
+	import { afterUpdate, onDestroy, onMount, tick } from 'svelte';
 	import { showCreationModal } from '$lib/stores/modalStore';
 	import { authOption } from '$lib/stores/authStore';
 	import SignIn from '$lib/components/auth/SignIn/index.svelte';
@@ -29,10 +31,41 @@
 	import Modal from '$lib/components/ui/Modal/index.svelte';
 	import VerifyEmail from '$lib/components/auth/VerifyEmail/index.svelte';
 	import CustomToggle from '$lib/components/ui/CustomToggle/index.svelte';
+	import { postHydrator, projectsHydrator } from '$lib/stores/hydrator';
 
+	onMount(() => {
+		initialized = true;
+	});
+
+	let projectSub;
+	const projectSubscription = projectsHydrator.subscribe((x) => {
+		console.log('updating');
+		console.log(projectSub)
+		projectSub = x;
+		console.log(projectSub)
+	});
 
 	onDestroy(() => {
+
 		destroyLogs();
+		currentPost.set(null);
+		currentPostPage.set(null);
+		htmlStore.set(null);
+		cssStore.set(null);
+		jsStore.set(null);
+		localCodeStoreCSS.set({});
+		localCodeStoreHTML.set({});
+		localCodeStoreJS.set({});
+		initialPostData.set(null);
+		currentPostPageRevert.set(null);
+		currentPostPageId.set(null);
+		projectSubscription();
+		selected = null;
+		postPages = null;
+		pageSelector = null;
+
+		
+
 	});
 
 	let windowWidth;
@@ -47,12 +80,11 @@
 
 	$: clientWidth.set(windowWidth);
 	$: isPost = $isPostStore;
-	$: postPages = $currentPost?.pages;
-	$: console.log($currentPost?.pages);
+	$: postPages = $pageStore || [];
 
 	// THEMES ---------------------------------------------------------------------
 	let mainThemeBackgroundColor = 'ECECEC';
-	let mainThemePanelColor = 'FBFBFB';
+	let mainThemePanelColor = 'fffffe';
 	let mainThemePanelAreaColor = 'FFFFFF';
 	let mainThemePrimaryTextColor = '525058';
 	let mainThemeFadedTextColor = '52505857';
@@ -69,8 +101,7 @@
 	let textareaBorder = '2020210d';
 	let postControlBackgroundColor = 'ffffff';
 	let mainThemeShadow = '0 1px 6px 0px #24232429';
-
-	// $: isDarkModeStore.set(isDarkMode);
+	let initialized = false;
 
 	$: if ($isDarkModeStore) {
 		mainThemeBackgroundColor = '242324'; //'202021'; // 272727
@@ -93,7 +124,7 @@
 		mainThemeShadow = '0 1px 6px 0px #242324';
 	} else {
 		mainThemeBackgroundColor = 'E3E3E3';
-		mainThemePanelColor = 'FBFBFB';
+		mainThemePanelColor = 'fffffe';
 		mainThemePanelAreaColor = 'FFFFFF';
 		mainThemePrimaryTextColor = '525058';
 		mainThemeFadedTextColor = '52505857';
@@ -113,25 +144,20 @@
 	}
 
 	const setPageSelect = () => {
-		if (pageSelector && $currentPostPage && !$changingPage && $navigating === null) {
+		if (pageSelector && !!$currentPostPage && !$changingPage && $navigating === null) {
 			pageSelector.value = $currentPostPage;
 		}
 	};
 
-	const handlePageSelect = () => {
-		if (selected) {
-			htmlStore.set(selected.html);
-			cssStore.set(selected.css);
-			jsStore.set(selected.js);
-			localCodeStoreHTML.set(selected.html);
-			localCodeStoreCSS.set(selected.css);
-			localCodeStoreJS.set(selected.js);
-
-			currentPostPage.set(selected);
+	const handlePageSelect = (e) => {
+		if ($selectedValue && ($selectedValue?.pid === $currentPost?.id)) {
+			htmlStore.set($selectedValue?.html);
+			cssStore.set($selectedValue?.css);
+			jsStore.set($selectedValue?.js);
+			currentPostPage.set($selectedValue);
 			currentPostPageRevert.set(JSON.parse(JSON.stringify($currentPostPage)));
-			if ($currentPostPage && $currentPostPage.id) currentPostPageId.set($currentPostPage.id);
+			if ($currentPostPage && $currentPostPage?.id) currentPostPageId.set($currentPostPage?.id);
 			changingPage.set(true);
-			// pageSelector.value = $currentPostPage;
 		}
 	};
 
@@ -189,10 +215,14 @@
 	$: modalCreationBool = $showCreationModal;
 	$: isSignUp = $authOption === 1;
 	$: isVertical.set(value);
+	$: if ($selectedValue) handlePageSelect();
+
+
 
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} on:message={handle_event}/>
+
 <div
 	class="learn"
 	style="
@@ -397,12 +427,10 @@
 			<div slot="editorMenu">
 				<a class="sticky-toggle" href="/" on:click|preventDefault>
 					<div class="menu-toggle select">
-						{#if postPages}
+		
 							<select
-								bind:value={selected}
-								on:change={() => {
-									handlePageSelect();
-								}}
+								bind:value={$selectedValue}
+								on:change={handlePageSelect}
 								bind:this={pageSelector}
 							>
 								{#each postPages as pageVal, i}
@@ -417,7 +445,7 @@
 									</option>
 								{/each}
 							</select>
-						{/if}
+					
 					</div>
 
 					<div
